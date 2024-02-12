@@ -3,6 +3,7 @@ module github.com/antham/wo
 go 1.21.7
 
 require (
+	github.com/bzick/tokenizer v1.4.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 )
