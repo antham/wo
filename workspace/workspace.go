@@ -56,17 +56,19 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 		return WorkspaceManager{}, errors.New("no VISUAL or EDITOR environment variable found")
 	}
 	s.shell = os.Getenv("SHELL")
-	s.CreateConfigFolder()
-	return s, nil
+	return s, s.CreateConfigFolder()
 }
 
 func (s WorkspaceManager) CreateConfigFolder() error {
 	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
 }
 
-func (s WorkspaceManager) List() []Workspace {
+func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
-	filepath.Walk(s.getFunctionDir(), func(path string, info fs.FileInfo, err error) error {
+	err := filepath.Walk(s.getFunctionDir(), func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		}
@@ -78,7 +80,10 @@ func (s WorkspaceManager) List() []Workspace {
 		workspaces = append(workspaces, workspace)
 		return nil
 	})
-	return workspaces
+	if err != nil {
+		return []Workspace{}, err
+	}
+	return workspaces, nil
 }
 
 func (s WorkspaceManager) Get(name string) (Workspace, error) {
@@ -96,7 +101,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 		if regexp.MustCompile("^#").MatchString(line) {
 			c.Description = strings.TrimSpace(strings.Trim(line, "#"))
 		}
-		if regexp.MustCompile("^\\s*function").MatchString(line) {
+		if regexp.MustCompile(`^\s*function`).MatchString(line) {
 			line = strings.TrimSpace(line)
 			f := strings.Fields(line)
 			c.Command = f[1]

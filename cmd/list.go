@@ -19,7 +19,7 @@ var lsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		workspaces := s.List()
+		workspaces, err := s.List()
 		if err != nil {
 			log.Fatal(err)
 		}
