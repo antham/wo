@@ -43,9 +43,9 @@ type WorkspaceManager struct {
 }
 
 func NewWorkspaceManager() (WorkspaceManager, error) {
-	s := WorkspaceManager{}
 	editor := os.Getenv("EDITOR")
 	visual := os.Getenv("VISUAL")
+	s := WorkspaceManager{}
 	switch {
 	case editor != "":
 		s.editor = editor
