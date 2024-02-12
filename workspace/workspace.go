@@ -55,11 +55,7 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 		return WorkspaceManager{}, errors.New("no VISUAL or EDITOR environment variable found")
 	}
 	s.shell = os.Getenv("SHELL")
-	return s, s.CreateConfigFolder()
-}
-
-func (s WorkspaceManager) CreateConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
+	return s, s.createConfigFolder()
 }
 
 func (s WorkspaceManager) List() ([]Workspace, error) {
@@ -179,6 +175,10 @@ func (s WorkspaceManager) execCommand(args ...string) error {
 	command.Stdin = os.Stdin
 	command.Stderr = os.Stderr
 	return command.Run()
+}
+
+func (s WorkspaceManager) createConfigFolder() error {
+	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
 }
 
 func (s WorkspaceManager) getConfigDir() string {
