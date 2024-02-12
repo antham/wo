@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
@@ -15,15 +13,12 @@ var loadCmd = &cobra.Command{
 	Aliases: []string{"l"},
 	Short:   "Load a workspace",
 	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		err = w.Load(args[0], env)
-		if err != nil {
-			log.Fatal(err)
-		}
+		return w.Load(args[0], env)
 	},
 }
 

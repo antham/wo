@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 
@@ -15,14 +14,14 @@ var showCmd = &cobra.Command{
 	Use:   "show workspace",
 	Short: "Show all functions available in a workspace",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		wo, err := w.Get(args[0])
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		l := 0
 		for _, c := range wo.Commands {
@@ -43,6 +42,7 @@ var showCmd = &cobra.Command{
 				fmt.Println()
 			}
 		}
+		return nil
 	},
 }
 

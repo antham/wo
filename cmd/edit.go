@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
@@ -12,15 +10,12 @@ var editCmd = &cobra.Command{
 	Use:   "edit workspace",
 	Short: "Edit a workspace",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		err = w.Edit(args[0])
-		if err != nil {
-			log.Fatal(err)
-		}
+		return w.Edit(args[0])
 	},
 }
 

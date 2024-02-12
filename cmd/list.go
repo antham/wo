@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/antham/wo/workspace"
@@ -14,19 +13,20 @@ var lsCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List workspace",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		s, err := workspace.NewWorkspaceManager()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		workspaces, err := s.List()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		sort.Sort(workspace.ByName(workspaces))
 		for _, w := range workspaces {
 			fmt.Println(w.Name)
 		}
+		return nil
 	},
 }
 

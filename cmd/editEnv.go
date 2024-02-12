@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
@@ -12,19 +10,16 @@ var editEnvCmd = &cobra.Command{
 	Use:   "edit-env workspace [environment]",
 	Short: "Edit an environment for a given workspace",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		env := ""
 		if len(args) > 1 {
 			env = args[1]
 		}
-		err = w.EditEnv(args[0], env)
-		if err != nil {
-			log.Fatal(err)
-		}
+		return w.EditEnv(args[0], env)
 	},
 }
 

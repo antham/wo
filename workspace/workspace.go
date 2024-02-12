@@ -46,7 +46,6 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 	s := WorkspaceManager{}
 	editor := os.Getenv("EDITOR")
 	visual := os.Getenv("VISUAL")
-
 	switch {
 	case editor != "":
 		s.editor = editor
