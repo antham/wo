@@ -9,9 +9,10 @@ import (
 
 // runCmd represents the run command
 var runCmd = &cobra.Command{
-	Use:   "run workspace function [function-args]...",
-	Short: "Run a command in a given workspace",
-	Args:  cobra.MinimumNArgs(2),
+	Use:     "run workspace function [function-args]...",
+	Aliases: []string{"r"},
+	Short:   "Run a command in a given workspace",
+	Args:    cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {

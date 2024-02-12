@@ -11,9 +11,10 @@ var env string
 
 // loadCmd represents the load command
 var loadCmd = &cobra.Command{
-	Use:   "load workspace",
-	Short: "Load a workspace",
-	Args:  cobra.ExactArgs(1),
+	Use:     "load workspace",
+	Aliases: []string{"l"},
+	Short:   "Load a workspace",
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		w, err := workspace.NewWorkspaceManager()
 		if err != nil {
