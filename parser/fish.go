@@ -1,17 +1,7 @@
-package fish
+package parser
 
 import (
-	"strings"
-
-	"github.com/antham/wo/parser"
 	"github.com/bzick/tokenizer"
-)
-
-const (
-	TokenDescriptionShort tokenizer.TokenKey = iota + 1
-	TokenDescriptionLong
-	TokenQuote
-	TokenFunction
 )
 
 type fishParser struct {
@@ -25,22 +15,32 @@ func newFishParser() *fishParser {
 		DefineTokens(TokenDescriptionShort, []string{"-d"}).
 		DefineTokens(TokenDescriptionShort, []string{"--description"}).
 		DefineTokens(TokenQuote, []string{`"`}).
-		DefineTokens(TokenFunction, []string{"function "})
+		DefineTokens(TokenFunction, []string{"function "}).
+		DefineTokens(TokenSemiColon, []string{";"})
 	return fishParser
 }
 
-func (fishParser *fishParser) Parse(content []byte) (interface{}, error) {
+func (fishParser *fishParser) parse(content []byte) (interface{}, error) {
 	return fishParser.analyzer(fishParser.tokenizer.ParseBytes(content))
 }
 
 func (fishParser *fishParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
-	functions := []parser.Function{}
+	functions := []Function{}
 	for {
 		if stream.CurrentToken().Key() == TokenFunction {
-			stream.GoNext()
-			function := stream.CurrentToken().ValueString()
-			description := []string{""}
-			stream.GoNext()
+			tokenFunction := stream.CurrentToken()
+			function := ""
+			for {
+				stream.GoNext()
+				if stream.CurrentToken().Key() == TokenDescriptionLong || stream.CurrentToken().Key() == TokenDescriptionShort {
+					break
+				}
+				if stream.CurrentToken().Line() != tokenFunction.Line() || stream.CurrentToken().Key() == TokenSemiColon {
+					break
+				}
+				function += stream.CurrentToken().ValueString()
+			}
+			descriptionTokens := []*tokenizer.Token{}
 			if stream.CurrentToken().Key() == TokenDescriptionLong || stream.CurrentToken().Key() == TokenDescriptionShort {
 				stream.GoNext()
 				if stream.CurrentToken().Key() == TokenQuote {
@@ -49,16 +49,15 @@ func (fishParser *fishParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 						if stream.CurrentToken().Key() == TokenQuote {
 							break
 						}
-						description = append(description, stream.CurrentToken().ValueString())
+						descriptionTokens = append(descriptionTokens, stream.CurrentToken())
 					}
 				}
 
 			}
-			functions = append(functions, parser.Function{Name: function, Description: strings.Join(description, " ")})
+			functions = append(functions, Function{Name: function, Description: createDescription(descriptionTokens)})
 		}
-
 		stream.GoNext()
-		if stream.CurrentToken() == nil {
+		if stream.CurrentToken().Key() == 0 {
 			break
 		}
 	}

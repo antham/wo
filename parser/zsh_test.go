@@ -1,17 +1,16 @@
-package zsh
+package parser
 
 import (
 	"testing"
 
-	"github.com/antham/wo/parser"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestZshParser(t *testing.T) {
 	zshParser := newZshParser()
-	data, err := zshParser.Parse([]byte(`
+	data, err := zshParser.parse([]byte(`
 # This is a description comment
-function f1() {
+function f1{
 	echo e;
 }
 
@@ -39,10 +38,10 @@ another_little_func () {}
 
 function_test () {}
 `))
-	functions := data.([]parser.Function)
+	functions := data.([]Function)
 	assert.NoError(t, err)
 	assert.Len(t, functions, 9)
-	assert.Equal(t, []parser.Function{
+	assert.Equal(t, []Function{
 		{Name: "f1", Description: "This is a description comment"},
 		{Name: "f2"},
 		{Name: "f3"},

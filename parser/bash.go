@@ -1,19 +1,7 @@
-package bash
+package parser
 
 import (
-	"strings"
-
-	"github.com/antham/wo/parser"
 	"github.com/bzick/tokenizer"
-)
-
-const (
-	TokenCurlyOpen tokenizer.TokenKey = iota + 1
-	TokenCurlyClose
-	TokenParenOpen
-	TokenParenClose
-	TokenFunction
-	TokenComment
 )
 
 type bashParser struct {
@@ -33,13 +21,13 @@ func newBashParser() *bashParser {
 	return bashParser
 }
 
-func (bashParser *bashParser) Parse(content []byte) (interface{}, error) {
+func (bashParser *bashParser) parse(content []byte) (interface{}, error) {
 	return bashParser.analyzer(bashParser.tokenizer.ParseBytes(content))
 }
 
 func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
-	functions := []parser.Function{}
-	comments := map[int][]string{}
+	functions := []Function{}
+	comments := map[int][]*tokenizer.Token{}
 	for {
 		if stream.CurrentToken().Key() == TokenComment {
 			currentToken := stream.CurrentToken()
@@ -48,7 +36,7 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 				if stream.CurrentToken().Line() != currentToken.Line() {
 					break
 				}
-				comments[stream.CurrentToken().Line()] = append(comments[stream.CurrentToken().Line()], stream.CurrentToken().ValueString())
+				comments[stream.CurrentToken().Line()] = append(comments[stream.CurrentToken().Line()], stream.CurrentToken())
 				stream.GoNext()
 			}
 		}
@@ -63,10 +51,10 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 				stream.GoPrev()
 			}
 			stream.GoTo(currentToken.ID())
-			functions = append(functions, parser.Function{Name: acc, Description: strings.Join(comments[stream.CurrentToken().Line()-1], " ")})
+			functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
 		}
 		stream.GoNext()
-		if stream.CurrentToken() == nil {
+		if stream.CurrentToken().Key() == 0 {
 			break
 		}
 	}

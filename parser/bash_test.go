@@ -1,15 +1,14 @@
-package bash
+package parser
 
 import (
 	"testing"
 
-	"github.com/antham/wo/parser"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBashParser(t *testing.T) {
 	bashParser := newBashParser()
-	data, err := bashParser.Parse([]byte(`
+	data, err := bashParser.parse([]byte(`
 # This is a description comment
 function f1() {
 	echo e;
@@ -35,10 +34,10 @@ another_little_func () {}
 
 function_test () {}
 `))
-	functions := data.([]parser.Function)
+	functions := data.([]Function)
 	assert.NoError(t, err)
 	assert.Len(t, functions, 7)
-	assert.Equal(t, []parser.Function{
+	assert.Equal(t, []Function{
 		{Name: "f1", Description: "This is a description comment"},
 		{Name: "f2"},
 		{Name: "f3"},

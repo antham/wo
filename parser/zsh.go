@@ -1,19 +1,7 @@
-package zsh
+package parser
 
 import (
-	"strings"
-
-	"github.com/antham/wo/parser"
 	"github.com/bzick/tokenizer"
-)
-
-const (
-	TokenCurlyOpen tokenizer.TokenKey = iota + 1
-	TokenCurlyClose
-	TokenParenOpen
-	TokenParenClose
-	TokenFunction
-	TokenComment
 )
 
 type zshParser struct {
@@ -33,13 +21,13 @@ func newZshParser() *zshParser {
 	return zshParser
 }
 
-func (zshParser *zshParser) Parse(content []byte) (interface{}, error) {
+func (zshParser *zshParser) parse(content []byte) (interface{}, error) {
 	return zshParser.analyzer(zshParser.tokenizer.ParseBytes(content))
 }
 
 func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
-	functions := []parser.Function{}
-	comments := map[int][]string{}
+	functions := []Function{}
+	comments := map[int][]*tokenizer.Token{}
 	for {
 		if stream.CurrentToken().Key() == TokenComment {
 			currentToken := stream.CurrentToken()
@@ -48,7 +36,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 				if stream.CurrentToken().Line() != currentToken.Line() {
 					break
 				}
-				comments[stream.CurrentToken().Line()] = append(comments[stream.CurrentToken().Line()], stream.CurrentToken().ValueString())
+				comments[stream.CurrentToken().Line()] = append(comments[stream.CurrentToken().Line()], stream.CurrentToken())
 				stream.GoNext()
 			}
 		}
@@ -63,7 +51,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 				stream.GoPrev()
 			}
 			stream.GoTo(currentToken.ID())
-			functions = append(functions, parser.Function{Name: acc, Description: strings.Join(comments[stream.CurrentToken().Line()-1], " ")})
+			functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
 		}
 		if stream.CurrentToken().Key() == TokenCurlyOpen && stream.PrevToken().Key() != TokenParenClose {
 			currentToken := stream.CurrentToken()
@@ -90,13 +78,13 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 					stream.GoNext()
 				}
 				stream.GoTo(currentToken.ID())
-				functions = append(functions, parser.Function{Name: acc, Description: strings.Join(comments[stream.CurrentToken().Line()-1], " ")})
+				functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
 			}
 			stream.GoTo(currentToken.ID())
 		}
 
 		stream.GoNext()
-		if stream.CurrentToken() == nil {
+		if stream.CurrentToken().Key() == 0 {
 			break
 		}
 	}
