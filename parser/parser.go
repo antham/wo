@@ -19,8 +19,8 @@ type Shell string
 
 const (
 	Zsh  Shell = "zsh"
-	Bash       = "bash"
-	Fish       = "fish"
+	Bash Shell = "bash"
+	Fish Shell = "fish"
 )
 
 type Function struct {
