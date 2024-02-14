@@ -38,8 +38,9 @@ type Command struct {
 }
 
 type WorkspaceManager struct {
-	editor string
-	shell  string
+	editor  string
+	shell   string
+	homeDir string
 }
 
 func NewWorkspaceManager() (WorkspaceManager, error) {
@@ -55,6 +56,11 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 		return WorkspaceManager{}, errors.New("no VISUAL or EDITOR environment variable found")
 	}
 	s.shell = os.Getenv("SHELL")
+	usr, err := user.Current()
+	if err != nil {
+		return WorkspaceManager{}, err
+	}
+	s.homeDir = usr.HomeDir
 	return s, s.createConfigFolder()
 }
 
@@ -176,15 +182,13 @@ func (s WorkspaceManager) createConfigFolder() error {
 }
 
 func (s WorkspaceManager) getConfigDir() string {
-	usr, _ := user.Current()
-	homeDir := usr.HomeDir
-	return homeDir + "/" + configDir
+	return fmt.Sprintf("%s/%s", s.homeDir, configDir)
 }
 
 func (s WorkspaceManager) getFunctionDir() string {
-	return s.getConfigDir() + "/functions"
+	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shell)
 }
 
 func (s WorkspaceManager) getEnvDir() string {
-	return s.getConfigDir() + "/envs"
+	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shell)
 }

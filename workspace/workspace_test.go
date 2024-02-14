@@ -39,7 +39,7 @@ func TestNewWorkspaceManager(t *testing.T) {
 			func(w WorkspaceManager, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, "vim", w.editor)
-				assert.Equal(t, "bash", w.shell)
+				assert.Equal(t, "bash", w.shellBin)
 				assert.DirExists(t, w.getFunctionDir())
 				assert.DirExists(t, w.getConfigDir())
 				assert.DirExists(t, w.getEnvDir())
@@ -54,7 +54,7 @@ func TestNewWorkspaceManager(t *testing.T) {
 			func(w WorkspaceManager, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, "emacs", w.editor)
-				assert.Equal(t, "zsh", w.shell)
+				assert.Equal(t, "zsh", w.shellBin)
 				assert.DirExists(t, w.getFunctionDir())
 				assert.DirExists(t, w.getConfigDir())
 				assert.DirExists(t, w.getEnvDir())
@@ -82,7 +82,7 @@ func TestList(t *testing.T) {
 		{
 			"Invalid function file",
 			func() {
-				path := getConfigPath(t) + "/functions/"
+				path := getConfigPath(t) + "/functions/bash"
 				assert.NoError(t, os.WriteFile(path+"/front", []byte{}, 0777))
 			},
 			func(ws []Workspace, err error) {
@@ -101,7 +101,7 @@ func TestList(t *testing.T) {
 		{
 			"Get all workspaces ordered alphabetically",
 			func() {
-				path := getConfigPath(t) + "/functions/"
+				path := getConfigPath(t) + "/functions/bash"
 				assert.NoError(t, os.WriteFile(path+"/front.bash", []byte{}, 0777))
 				assert.NoError(t, os.WriteFile(path+"/api.bash", []byte{}, 0777))
 				assert.NoError(t, os.WriteFile(path+"/db.bash", []byte{}, 0777))
