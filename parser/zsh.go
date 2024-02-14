@@ -29,6 +29,9 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 	functions := []Function{}
 	comments := map[int][]*tokenizer.Token{}
 	for {
+		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
+			break
+		}
 		if stream.CurrentToken().Key() == TokenComment {
 			currentToken := stream.CurrentToken()
 			stream.GoNext()
@@ -82,11 +85,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 			}
 			stream.GoTo(currentToken.ID())
 		}
-
 		stream.GoNext()
-		if stream.CurrentToken().Key() == 0 {
-			break
-		}
 	}
 	return functions, nil
 }

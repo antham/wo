@@ -1,7 +1,6 @@
 package workspace
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -9,8 +8,9 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"strings"
+
+	"github.com/antham/wo/parser"
 )
 
 const configDir = ".config/wo"
@@ -82,26 +82,20 @@ func (s WorkspaceManager) List() ([]Workspace, error) {
 }
 
 func (s WorkspaceManager) Get(name string) (Workspace, error) {
-	readFile, err := os.Open(s.resolveFunctionFile(name))
+	content, err := os.ReadFile(s.resolveFunctionFile(name))
 	if err != nil {
 		return Workspace{}, err
 	}
-	defer readFile.Close()
-	fileScanner := bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
+	fs, err := parser.Parse(s.shell, content)
+	if err != nil {
+		return Workspace{}, err
+	}
 	commands := []Command{}
-	c := Command{}
-	for fileScanner.Scan() {
-		line := fileScanner.Text()
-		if regexp.MustCompile("^#").MatchString(line) {
-			c.Description = strings.TrimSpace(strings.Trim(line, "#"))
-		}
-		if regexp.MustCompile(`^\s*function`).MatchString(line) {
-			line = strings.TrimSpace(line)
-			f := strings.Fields(line)
-			c.Command = f[1]
-			commands = append(commands, c)
-		}
+	for _, f := range fs {
+		commands = append(commands, Command{
+			Command:     f.Name,
+			Description: f.Description,
+		})
 	}
 	return Workspace{
 		Name:     name,

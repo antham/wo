@@ -27,6 +27,9 @@ func (fishParser *fishParser) parse(content []byte) (interface{}, error) {
 func (fishParser *fishParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
 	functions := []Function{}
 	for {
+		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
+			break
+		}
 		if stream.CurrentToken().Key() == TokenFunction {
 			tokenFunction := stream.CurrentToken()
 			function := ""
@@ -57,9 +60,6 @@ func (fishParser *fishParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 			functions = append(functions, Function{Name: function, Description: createDescription(descriptionTokens)})
 		}
 		stream.GoNext()
-		if stream.CurrentToken().Key() == 0 {
-			break
-		}
 	}
 	return functions, nil
 }

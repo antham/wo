@@ -29,6 +29,9 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 	functions := []Function{}
 	comments := map[int][]*tokenizer.Token{}
 	for {
+		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
+			break
+		}
 		if stream.CurrentToken().Key() == TokenComment {
 			currentToken := stream.CurrentToken()
 			stream.GoNext()
@@ -54,9 +57,6 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 			functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
 		}
 		stream.GoNext()
-		if stream.CurrentToken().Key() == 0 {
-			break
-		}
 	}
 	return functions, nil
 }
