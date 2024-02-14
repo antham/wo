@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -38,9 +39,10 @@ type Command struct {
 }
 
 type WorkspaceManager struct {
-	editor  string
-	shell   string
-	homeDir string
+	editor   string
+	shellBin string
+	shell    string
+	homeDir  string
 }
 
 func NewWorkspaceManager() (WorkspaceManager, error) {
@@ -55,7 +57,8 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 	default:
 		return WorkspaceManager{}, errors.New("no VISUAL or EDITOR environment variable found")
 	}
-	s.shell = os.Getenv("SHELL")
+	s.shellBin = os.Getenv("SHELL")
+	s.shell = path.Base(s.shellBin)
 	usr, err := user.Current()
 	if err != nil {
 		return WorkspaceManager{}, err
@@ -162,7 +165,7 @@ func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
 
 func (s WorkspaceManager) getExtension() string {
 	for _, shell := range []string{"fish", "bash", "zsh", "sh"} {
-		if strings.Contains(s.shell, shell) {
+		if strings.Contains(s.shellBin, shell) {
 			return shell
 		}
 	}
@@ -170,7 +173,7 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) execCommand(args ...string) error {
-	command := exec.Command(s.shell, args...)
+	command := exec.Command(s.shellBin, args...)
 	command.Stdout = os.Stdout
 	command.Stdin = os.Stdin
 	command.Stderr = os.Stderr
@@ -186,9 +189,9 @@ func (s WorkspaceManager) getConfigDir() string {
 }
 
 func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shell)
+	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shellBin)
 }
 
 func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shell)
+	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shellBin)
 }
