@@ -30,10 +30,12 @@ var showCmd = &cobra.Command{
 			}
 		}
 		sort.Sort(workspace.ByCommand(wo.Commands))
-		fmt.Println(wo.Name)
+		fmt.Println("## " + wo.Name + " ##")
 		if len(wo.Commands) == 0 {
 			fmt.Println("   no functions defined")
 		}
+		fmt.Println()
+		fmt.Println("Functions:")
 		for _, c := range wo.Commands {
 			fmt.Printf("   %-"+strconv.Itoa(l)+"s", c.Command)
 			if c.Description != "" {
@@ -41,6 +43,14 @@ var showCmd = &cobra.Command{
 			} else {
 				fmt.Println()
 			}
+		}
+		fmt.Println()
+		fmt.Println("Envs")
+		if len(wo.Envs) == 0 {
+			fmt.Println("   no envs defined")
+		}
+		for _, e := range wo.Envs {
+			fmt.Printf("  -%s\n", e)
 		}
 		return nil
 	},
