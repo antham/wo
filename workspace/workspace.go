@@ -31,6 +31,7 @@ func (a ByCommand) Less(i, j int) bool { return a[i].Command < a[j].Command }
 type Workspace struct {
 	Name     string
 	Commands []Command
+	Envs     []string
 }
 
 type Command struct {
@@ -39,10 +40,11 @@ type Command struct {
 }
 
 type WorkspaceManager struct {
-	editor   string
-	shellBin string
-	shell    string
-	homeDir  string
+	editor      string
+	shellBin    string
+	shell       string
+	homeDir     string
+	execCommand func(...string) error
 }
 
 func NewWorkspaceManager() (WorkspaceManager, error) {
@@ -64,6 +66,7 @@ func NewWorkspaceManager() (WorkspaceManager, error) {
 		return WorkspaceManager{}, err
 	}
 	s.homeDir = usr.HomeDir
+	s.execCommand = execCommand(s.shellBin)
 	return s, s.createConfigFolder()
 }
 
@@ -92,15 +95,35 @@ func (s WorkspaceManager) List() ([]Workspace, error) {
 
 func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	content, err := os.ReadFile(s.resolveFunctionFile(name))
+	if os.IsNotExist(err) {
+		return Workspace{}, errors.New("the workspace does not exist")
+	}
 	if err != nil {
 		return Workspace{}, err
 	}
-	fs, err := parser.Parse(s.shell, content)
+	funcs, err := parser.Parse(s.shell, content)
+	if err != nil {
+		return Workspace{}, err
+	}
+	envs := []string{}
+	err = filepath.Walk(s.getEnvDir(), func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		s := strings.Split(info.Name(), ".")
+		if s[0] == name {
+			envs = append(envs, s[1])
+		}
+		return nil
+	})
 	if err != nil {
 		return Workspace{}, err
 	}
 	commands := []Command{}
-	for _, f := range fs {
+	for _, f := range funcs {
 		commands = append(commands, Command{
 			Command:     f.Name,
 			Description: f.Description,
@@ -109,6 +132,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	return Workspace{
 		Name:     name,
 		Commands: commands,
+		Envs:     envs,
 	}, nil
 }
 
@@ -129,7 +153,15 @@ func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs [
 }
 
 func (s WorkspaceManager) Remove(name string) error {
-	return os.Remove(s.resolveFunctionFile(name))
+	w, err := s.Get(name)
+	if err != nil {
+		return err
+	}
+	errs := []error{os.Remove(s.resolveFunctionFile(name))}
+	for _, env := range w.Envs {
+		errs = append(errs, os.Remove(s.resolveEnvFile(name, env)))
+	}
+	return errors.Join(errs...)
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, cmds ...string) []string {
@@ -172,14 +204,6 @@ func (s WorkspaceManager) getExtension() string {
 	return ""
 }
 
-func (s WorkspaceManager) execCommand(args ...string) error {
-	command := exec.Command(s.shellBin, args...)
-	command.Stdout = os.Stdout
-	command.Stdin = os.Stdin
-	command.Stderr = os.Stderr
-	return command.Run()
-}
-
 func (s WorkspaceManager) createConfigFolder() error {
 	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
 }
@@ -194,4 +218,14 @@ func (s WorkspaceManager) getFunctionDir() string {
 
 func (s WorkspaceManager) getEnvDir() string {
 	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shellBin)
+}
+
+func execCommand(shellBin string) func(args ...string) error {
+	return func(args ...string) error {
+		command := exec.Command(shellBin, args...)
+		command.Stdout = os.Stdout
+		command.Stdin = os.Stdin
+		command.Stderr = os.Stderr
+		return command.Run()
+	}
 }

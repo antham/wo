@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/bzick/tokenizer"
+import (
+	"strings"
+
+	"github.com/bzick/tokenizer"
+)
 
 const (
 	TokenCurlyOpen tokenizer.TokenKey = iota + 1
@@ -29,21 +33,34 @@ type Function struct {
 }
 
 func Parse(shell string, content []byte) ([]Function, error) {
+	var data interface{}
+	var err error
 	switch shell {
 	case string(Zsh):
 		p := newZshParser()
-		fs, err := p.parse(content)
-		return fs.([]Function), err
+		data, err = p.parse(content)
+		if err != nil {
+			return []Function{}, nil
+		}
 	case string(Bash):
 		p := newBashParser()
-		fs, err := p.parse(content)
-		return fs.([]Function), err
+		data, err = p.parse(content)
+		if err != nil {
+			return []Function{}, nil
+		}
 	case string(Fish):
 		p := newFishParser()
-		fs, err := p.parse(content)
-		return fs.([]Function), err
+		data, err = p.parse(content)
+		if err != nil {
+			return []Function{}, nil
+		}
 	}
-	return []Function{}, nil
+	fs := []Function{}
+	for _, f := range data.([]Function) {
+		f.Description = strings.ReplaceAll(f.Description, "function ", "function")
+		fs = append(fs, f)
+	}
+	return fs, nil
 }
 
 func createDescription(descriptionTokens []*tokenizer.Token) string {
