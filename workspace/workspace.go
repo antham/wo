@@ -213,11 +213,11 @@ func (s WorkspaceManager) getConfigDir() string {
 }
 
 func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shellBin)
+	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shell)
 }
 
 func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shellBin)
+	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shell)
 }
 
 func execCommand(shellBin string) func(args ...string) error {
