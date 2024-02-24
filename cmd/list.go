@@ -1,8 +1,9 @@
 package cmd
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
@@ -22,7 +23,9 @@ var lsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		sort.Sort(workspace.ByName(workspaces))
+		slices.SortFunc(workspaces, func(a, b workspace.Workspace) int {
+			return cmp.Compare(a.Name, b.Name)
+		})
 		for _, w := range workspaces {
 			fmt.Println(w.Name)
 		}

@@ -1,8 +1,9 @@
 package cmd
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 
 	"github.com/antham/wo/workspace"
@@ -29,7 +30,9 @@ var showCmd = &cobra.Command{
 				l = len(c.Command)
 			}
 		}
-		sort.Sort(workspace.ByCommand(wo.Commands))
+		slices.SortFunc(wo.Commands, func(a, b workspace.Command) int {
+			return cmp.Compare(a.Command, b.Command)
+		})
 		fmt.Println("## " + wo.Name + " ##")
 		if len(wo.Commands) == 0 {
 			fmt.Println("   no functions defined")

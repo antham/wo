@@ -16,18 +16,6 @@ import (
 
 const configDir = ".config/wo"
 
-type ByName []Workspace
-
-func (a ByName) Len() int           { return len(a) }
-func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
-
-type ByCommand []Command
-
-func (a ByCommand) Len() int           { return len(a) }
-func (a ByCommand) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCommand) Less(i, j int) bool { return a[i].Command < a[j].Command }
-
 type Workspace struct {
 	Name     string
 	Commands []Command
