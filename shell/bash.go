@@ -12,12 +12,12 @@ func newBashParser() *bashParser {
 	bashParser := &bashParser{}
 	bashParser.tokenizer = tokenizer.New()
 	bashParser.tokenizer.
-		DefineTokens(TokenCurlyOpen, []string{"{"}).
-		DefineTokens(TokenCurlyClose, []string{"}"}).
-		DefineTokens(TokenParenOpen, []string{"("}).
-		DefineTokens(TokenParenClose, []string{")"}).
-		DefineTokens(TokenFunction, []string{"function "}).
-		DefineTokens(TokenComment, []string{"#"})
+		DefineTokens(tokenCurlyOpen, []string{"{"}).
+		DefineTokens(tokenCurlyClose, []string{"}"}).
+		DefineTokens(tokenParenOpen, []string{"("}).
+		DefineTokens(tokenParenClose, []string{")"}).
+		DefineTokens(tokenFunction, []string{"function "}).
+		DefineTokens(tokenComment, []string{"#"})
 	return bashParser
 }
 
@@ -32,7 +32,7 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
 			break
 		}
-		if stream.CurrentToken().Key() == TokenComment {
+		if stream.CurrentToken().Key() == tokenComment {
 			currentToken := stream.CurrentToken()
 			stream.GoNext()
 			for {
@@ -43,11 +43,11 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, e
 				stream.GoNext()
 			}
 		}
-		if stream.IsNextSequence(TokenParenOpen, TokenParenClose) {
+		if stream.IsNextSequence(tokenParenOpen, tokenParenClose) {
 			currentToken := stream.CurrentToken()
 			acc := ""
 			for {
-				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == TokenFunction {
+				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == tokenFunction {
 					break
 				}
 				acc = stream.CurrentToken().ValueString() + acc

@@ -7,24 +7,24 @@ import (
 )
 
 const (
-	TokenCurlyOpen tokenizer.TokenKey = iota + 1
-	TokenCurlyClose
-	TokenParenOpen
-	TokenParenClose
-	TokenComment
-	TokenDescriptionShort
-	TokenDescriptionLong
-	TokenQuote
-	TokenFunction
-	TokenSemiColon
+	tokenCurlyOpen tokenizer.TokenKey = iota + 1
+	tokenCurlyClose
+	tokenParenOpen
+	tokenParenClose
+	tokenComment
+	tokenDescriptionShort
+	tokenDescriptionLong
+	tokenQuote
+	tokenFunction
+	tokenSemiColon
 )
 
-type Shell string
+type shellStr string
 
 const (
-	Zsh  Shell = "zsh"
-	Bash Shell = "bash"
-	Fish Shell = "fish"
+	zsh  shellStr = "zsh"
+	bash shellStr = "bash"
+	fish shellStr = "fish"
 )
 
 type Function struct {
@@ -36,19 +36,19 @@ func Parse(shell string, content []byte) ([]Function, error) {
 	var data interface{}
 	var err error
 	switch shell {
-	case string(Zsh):
+	case string(zsh):
 		p := newZshParser()
 		data, err = p.parse(content)
 		if err != nil {
 			return []Function{}, nil
 		}
-	case string(Bash):
+	case string(bash):
 		p := newBashParser()
 		data, err = p.parse(content)
 		if err != nil {
 			return []Function{}, nil
 		}
-	case string(Fish):
+	case string(fish):
 		p := newFishParser()
 		data, err = p.parse(content)
 		if err != nil {

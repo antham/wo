@@ -12,12 +12,12 @@ func newZshParser() *zshParser {
 	zshParser := &zshParser{}
 	zshParser.tokenizer = tokenizer.New()
 	zshParser.tokenizer.
-		DefineTokens(TokenCurlyOpen, []string{"{"}).
-		DefineTokens(TokenCurlyClose, []string{"}"}).
-		DefineTokens(TokenParenOpen, []string{"("}).
-		DefineTokens(TokenParenClose, []string{")"}).
-		DefineTokens(TokenFunction, []string{"function "}).
-		DefineTokens(TokenComment, []string{"#"})
+		DefineTokens(tokenCurlyOpen, []string{"{"}).
+		DefineTokens(tokenCurlyClose, []string{"}"}).
+		DefineTokens(tokenParenOpen, []string{"("}).
+		DefineTokens(tokenParenClose, []string{")"}).
+		DefineTokens(tokenFunction, []string{"function "}).
+		DefineTokens(tokenComment, []string{"#"})
 	return zshParser
 }
 
@@ -32,7 +32,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
 			break
 		}
-		if stream.CurrentToken().Key() == TokenComment {
+		if stream.CurrentToken().Key() == tokenComment {
 			currentToken := stream.CurrentToken()
 			stream.GoNext()
 			for {
@@ -43,11 +43,11 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 				stream.GoNext()
 			}
 		}
-		if stream.IsNextSequence(TokenParenOpen, TokenParenClose) {
+		if stream.IsNextSequence(tokenParenOpen, tokenParenClose) {
 			currentToken := stream.CurrentToken()
 			acc := ""
 			for {
-				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == TokenFunction {
+				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == tokenFunction {
 					break
 				}
 				acc = stream.CurrentToken().ValueString() + acc
@@ -56,7 +56,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 			stream.GoTo(currentToken.ID())
 			functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
 		}
-		if stream.CurrentToken().Key() == TokenCurlyOpen && stream.PrevToken().Key() != TokenParenClose {
+		if stream.CurrentToken().Key() == tokenCurlyOpen && stream.PrevToken().Key() != tokenParenClose {
 			currentToken := stream.CurrentToken()
 			stream.GoPrev()
 			isFunction := false
@@ -64,7 +64,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 				if stream.CurrentToken().Line() != currentToken.Line() {
 					break
 				}
-				if stream.CurrentToken().Key() == TokenFunction {
+				if stream.CurrentToken().Key() == tokenFunction {
 					stream.GoNext()
 					isFunction = true
 					break
@@ -74,7 +74,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, err
 			if isFunction {
 				acc := ""
 				for {
-					if stream.CurrentToken().Key() == TokenCurlyOpen {
+					if stream.CurrentToken().Key() == tokenCurlyOpen {
 						break
 					}
 					acc = acc + stream.CurrentToken().ValueString()
