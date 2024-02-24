@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/antham/wo/parser"
+	"github.com/antham/wo/shell"
 )
 
 const configDir = ".config/wo"
@@ -89,7 +89,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	funcs, err := parser.Parse(s.shell, content)
+	funcs, err := shell.Parse(s.shell, content)
 	if err != nil {
 		return Workspace{}, err
 	}
