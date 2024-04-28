@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -9,6 +10,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -105,6 +107,9 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 			Description: f.Description,
 		})
 	}
+	slices.SortFunc(commands, func(a, b Command) int {
+		return cmp.Compare(a.Command, b.Command)
+	})
 	return Workspace{
 		Name:     name,
 		Commands: commands,
