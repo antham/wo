@@ -38,7 +38,7 @@ another_little_func () {}
 
 function_test () {}
 `))
-	functions := data.([]Function)
+	functions := data
 	assert.NoError(t, err)
 	assert.Len(t, functions, 9)
 	assert.Equal(t, []Function{

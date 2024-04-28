@@ -21,11 +21,11 @@ func newBashParser() *bashParser {
 	return bashParser
 }
 
-func (bashParser *bashParser) parse(content []byte) (interface{}, error) {
+func (bashParser *bashParser) parse(content []byte) ([]Function, error) {
 	return bashParser.analyzer(bashParser.tokenizer.ParseBytes(content))
 }
 
-func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
+func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) ([]Function, error) {
 	functions := []Function{}
 	comments := map[int][]*tokenizer.Token{}
 	for {

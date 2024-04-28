@@ -33,7 +33,7 @@ type Function struct {
 }
 
 func Parse(shell string, content []byte) ([]Function, error) {
-	var data interface{}
+	var data []Function
 	var err error
 	switch shell {
 	case string(zsh):
@@ -56,7 +56,7 @@ func Parse(shell string, content []byte) ([]Function, error) {
 		}
 	}
 	fs := []Function{}
-	for _, f := range data.([]Function) {
+	for _, f := range data {
 		f.Description = strings.ReplaceAll(f.Description, "function ", "function")
 		fs = append(fs, f)
 	}

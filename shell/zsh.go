@@ -21,11 +21,11 @@ func newZshParser() *zshParser {
 	return zshParser
 }
 
-func (zshParser *zshParser) parse(content []byte) (interface{}, error) {
+func (zshParser *zshParser) parse(content []byte) ([]Function, error) {
 	return zshParser.analyzer(zshParser.tokenizer.ParseBytes(content))
 }
 
-func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) (interface{}, error) {
+func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) ([]Function, error) {
 	functions := []Function{}
 	comments := map[int][]*tokenizer.Token{}
 	for {

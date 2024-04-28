@@ -27,7 +27,7 @@ function f5 -d "f5 description comment";echo e; end
 
 function f6;echo e; end
 `))
-	functions := data.([]Function)
+	functions := data
 	assert.NoError(t, err)
 	assert.Len(t, functions, 6)
 	assert.Equal(t, []Function{

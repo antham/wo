@@ -11,7 +11,7 @@ func newFishParser() *fishParser {
 	return &fishParser{}
 }
 
-func (fishParser *fishParser) parse(content []byte) (interface{}, error) {
+func (fishParser *fishParser) parse(content []byte) ([]Function, error) {
 	fs := []Function{}
 	r := regexp.MustCompile(`function\s+(?P<function>[^ |;|\n]+)(?:\s+--?d(?:escription)?\s+(?:"|')(?P<definition>[^(?:'|")]+)(?:"|'))?`).FindAllStringSubmatch(string(content), -1)
 	for _, l := range r {
