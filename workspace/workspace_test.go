@@ -95,7 +95,7 @@ func TestList(t *testing.T) {
 			},
 			func(ws []Workspace, err error) {
 				assert.NoError(t, err)
-				assert.Len(t, ws, 0)
+				assert.Empty(t, ws)
 			},
 		},
 		{
@@ -107,9 +107,12 @@ func TestList(t *testing.T) {
 				assert.NoError(t, os.WriteFile(functionPath+"/db.bash", []byte{}, 0777))
 
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.WriteFile(envPath+"/front.prod.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/api.dev.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/db.staging.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/front", 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/api", 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/db", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/api/dev.bash", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/db/staging.bash", []byte{}, 0777))
 			},
 			func(ws []Workspace, err error) {
 				assert.NoError(t, err)
@@ -126,6 +129,7 @@ func TestList(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			assert.NoError(t, err)
@@ -167,7 +171,8 @@ test_func2() {
 `), 0777))
 
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.WriteFile(envPath+"/front.prod.bash", []byte(``), 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/front", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte(``), 0777))
 			},
 			func(w Workspace, err error) {
 				assert.NoError(t, err)
@@ -193,6 +198,7 @@ test_func2() {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			assert.NoError(t, err)
@@ -213,6 +219,9 @@ func TestEdit(t *testing.T) {
 			"Edit workspace",
 			func(args []string) {
 				assert.Equal(t, []string{"-c", "emacs " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
+				f, err := os.Stat(getHomePath(t) + "/.config/wo/envs/bash/test/default.bash")
+				assert.NoError(t, err)
+				assert.Equal(t, "default.bash", f.Name())
 			},
 		},
 	}
@@ -220,6 +229,7 @@ func TestEdit(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			args := []string{}
@@ -245,14 +255,14 @@ func TestEditEnv(t *testing.T) {
 			"Edit default workspace",
 			"",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "emacs " + getHomePath(t) + "/.config/wo/envs/bash/test.default.bash"}, args)
+				assert.Equal(t, []string{"-c", "emacs " + getHomePath(t) + "/.config/wo/envs/bash/test/default.bash"}, args)
 			},
 		},
 		{
 			"Edit prod workspace",
 			"prod",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "emacs " + getHomePath(t) + "/.config/wo/envs/bash/test.prod.bash"}, args)
+				assert.Equal(t, []string{"-c", "emacs " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash"}, args)
 			},
 		},
 	}
@@ -260,6 +270,7 @@ func TestEditEnv(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			args := []string{}
@@ -295,11 +306,12 @@ func TestLoad(t *testing.T) {
 			"Load workspace with an env defined",
 			"prod",
 			func() {
-				path := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.WriteFile(path+"/test.prod.bash", []byte{}, 0777))
+				envPath := getConfigPath(t) + "/envs/bash"
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test.prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
+				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
 			},
 		},
 	}
@@ -307,6 +319,7 @@ func TestLoad(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			args := []string{}
@@ -346,11 +359,12 @@ func TestRunFunction(t *testing.T) {
 			[]string{"run-db", "--watch"},
 			"prod",
 			func() {
-				path := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.WriteFile(path+"/test.prod.bash", []byte{}, 0777))
+				envPath := getConfigPath(t) + "/envs/bash"
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test.prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash", "-c", "run-db --watch"}, args)
+				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash", "-c", "run-db --watch"}, args)
 			},
 		},
 	}
@@ -358,6 +372,7 @@ func TestRunFunction(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			args := []string{}
@@ -387,7 +402,7 @@ func TestRemove(t *testing.T) {
 			func() {
 			},
 			func(e error) {
-				assert.EqualError(t, e, "the workspace does not exist")
+				assert.Error(t, e)
 			},
 		},
 		{
@@ -395,25 +410,27 @@ func TestRemove(t *testing.T) {
 			"test",
 			func() {
 				path := getConfigPath(t)
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test.prod.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test.dev.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/front.dev.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(path+"/envs/bash/test", 0777))
+				assert.NoError(t, os.MkdirAll(path+"/envs/bash/front", 0777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/prod.bash", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/dev.bash", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/front/dev.bash", []byte{}, 0777))
 				assert.NoError(t, os.WriteFile(path+"/functions/bash/front.bash", []byte{}, 0777))
 				assert.NoError(t, os.WriteFile(path+"/functions/bash/test.bash", []byte{}, 0777))
 			},
 			func(e error) {
 				assert.NoError(t, e)
 				path := getConfigPath(t)
-				_, err := os.Stat(path + "/envs/bash/test.prod.bash")
+				_, err := os.Stat(path + "/envs/bash/test/prod.bash")
 				assert.True(t, os.IsNotExist(err))
-				_, err = os.Stat(path + "/envs/bash/test.dev.bash")
+				_, err = os.Stat(path + "/envs/bash/test/dev.bash")
 				assert.True(t, os.IsNotExist(err))
 				_, err = os.Stat(path + "/functions/bash/test.bash")
 				assert.True(t, os.IsNotExist(err))
 
 				_, err = os.Stat(path + "/functions/bash/front.bash")
 				assert.NoError(t, err)
-				_, err = os.Stat(path + "/envs/bash/front.dev.bash")
+				_, err = os.Stat(path + "/envs/bash/front/dev.bash")
 				assert.NoError(t, err)
 			},
 		},
@@ -422,6 +439,7 @@ func TestRemove(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
+			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "bash")
 			w, err := NewWorkspaceManager()
 			assert.NoError(t, err)

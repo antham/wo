@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/antham/wo/shell"
@@ -67,7 +68,7 @@ func (s WorkspaceManager) List() ([]Workspace, error) {
 		if info.IsDir() {
 			return nil
 		}
-		name := strings.Split(info.Name(), ".")[0]
+		name := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 		workspace, err := s.Get(name)
 		if err != nil {
 			return err
@@ -93,20 +94,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	envs := []string{}
-	err = filepath.Walk(s.getEnvDir(), func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		s := strings.Split(info.Name(), ".")
-		if s[0] == name {
-			envs = append(envs, s[1])
-		}
-		return nil
-	})
+	envs, err := s.listEnvs(name)
 	if err != nil {
 		return Workspace{}, err
 	}
@@ -125,11 +113,19 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 }
 
 func (s WorkspaceManager) Edit(name string) error {
+	err := s.createWorkspaceEnvFolder(name)
+	if err != nil {
+		return err
+	}
+	err = s.createWorkspaceDefaultEnv(name)
+	if err != nil {
+		return err
+	}
 	return s.edit(s.resolveFunctionFile(name))
 }
 
 func (s WorkspaceManager) EditEnv(name string, env string) error {
-	return s.edit(s.resolveEnvFile(name, env))
+	return s.edit(s.resolveWorkspaceEnvFile(name, env))
 }
 
 func (s WorkspaceManager) Load(name string, env string) error {
@@ -141,20 +137,16 @@ func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs [
 }
 
 func (s WorkspaceManager) Remove(name string) error {
-	w, err := s.Get(name)
+	_, err := s.Get(name)
 	if err != nil {
 		return err
 	}
-	errs := []error{os.Remove(s.resolveFunctionFile(name))}
-	for _, env := range w.Envs {
-		errs = append(errs, os.Remove(s.resolveEnvFile(name, env)))
-	}
-	return errors.Join(errs...)
+	return errors.Join(os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, cmds ...string) []string {
 	stmts := []string{}
-	envFile := s.resolveEnvFile(name, env)
+	envFile := s.resolveWorkspaceEnvFile(name, env)
 	_, eerr := os.Stat(envFile)
 	if eerr == nil {
 		stmts = append(stmts, "-C", fmt.Sprintf("source %s", envFile))
@@ -175,12 +167,30 @@ func (s WorkspaceManager) resolveEnv(env string) string {
 	return env
 }
 
+func (s WorkspaceManager) listEnvs(name string) ([]string, error) {
+	envs := []string{}
+	dir := s.getWorkspaceEnvDir(name)
+	file, err := os.Open(dir)
+	if err != nil {
+		return envs, err
+	}
+	fs, err := file.Readdir(-1)
+	if err != nil {
+		return envs, err
+	}
+	for _, f := range fs {
+		envs = append(envs, strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
+	}
+	sort.Strings(envs)
+	return envs, err
+}
+
 func (s WorkspaceManager) resolveFunctionFile(name string) string {
 	return fmt.Sprintf("%s/%s.%s", s.getFunctionDir(), name, s.getExtension())
 }
 
-func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
-	return fmt.Sprintf("%s/%s.%s.%s", s.getEnvDir(), name, s.resolveEnv(env), s.getExtension())
+func (s WorkspaceManager) resolveWorkspaceEnvFile(name string, env string) string {
+	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvDir(name), s.resolveEnv(env), s.getExtension())
 }
 
 func (s WorkspaceManager) getExtension() string {
@@ -196,6 +206,15 @@ func (s WorkspaceManager) createConfigFolder() error {
 	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
 }
 
+func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
+	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0777)
+}
+
+func (s WorkspaceManager) createWorkspaceDefaultEnv(name string) error {
+	_, err := os.OpenFile(s.resolveWorkspaceEnvFile(name, "default"), os.O_CREATE, 0666)
+	return err
+}
+
 func (s WorkspaceManager) getConfigDir() string {
 	return fmt.Sprintf("%s/%s", s.homeDir, configDir)
 }
@@ -206,6 +225,10 @@ func (s WorkspaceManager) getFunctionDir() string {
 
 func (s WorkspaceManager) getEnvDir() string {
 	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shell)
+}
+
+func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
+	return fmt.Sprintf("%s/%s", s.getEnvDir(), name)
 }
 
 func execCommand(shellBin string) func(args ...string) error {
