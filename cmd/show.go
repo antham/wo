@@ -54,7 +54,7 @@ var showCmd = &cobra.Command{
 				functionRowTableSize[1] = len(c.Description) + 1
 			}
 		}
-		envRowTableSize := 0
+		envRowTableSize := 5
 		for _, e := range wo.Envs {
 			if len(e)+1 > envRowTableSize {
 				envRowTableSize = len(e) + 1
