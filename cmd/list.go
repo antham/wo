@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"cmp"
 	"fmt"
-	"slices"
 
 	"github.com/antham/wo/workspace"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/spf13/cobra"
 )
 
@@ -23,12 +23,29 @@ var lsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		slices.SortFunc(workspaces, func(a, b workspace.Workspace) int {
-			return cmp.Compare(a.Name, b.Name)
-		})
+		wss := []string{}
+		workspaceRowTableSize := 11
 		for _, w := range workspaces {
-			fmt.Println(w.Name)
+			if len(w.Name)+1 > workspaceRowTableSize {
+				workspaceRowTableSize = len(w.Name) + 1
+			}
+			wss = append(wss, w.Name)
 		}
+		ws := table.New().
+			Border(lipgloss.NormalBorder()).
+			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
+			Headers("Workspaces").
+			StyleFunc(func(row, col int) lipgloss.Style {
+				var style lipgloss.Style
+				switch {
+				case row == 0:
+					style = style.Bold(true).Foreground(lipgloss.Color("#C683D7"))
+				}
+				style = style.Copy().Width(workspaceRowTableSize)
+				return style
+			}).
+			Rows([][]string{wss}...)
+		fmt.Println(ws)
 		return nil
 	},
 }
