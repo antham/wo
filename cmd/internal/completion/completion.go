@@ -41,3 +41,17 @@ func (c Completion) FindCommands(workspace string, toComplete string) ([]string,
 	}
 	return cs, nil
 }
+
+func (c Completion) FindEnvs(workspace string, toComplete string) ([]string, error) {
+	w, err := c.workspaceManager.Get(workspace)
+	if err != nil {
+		return []string{}, err
+	}
+	envs := []string{}
+	for _, env := range w.Envs {
+		if strings.HasPrefix(env, toComplete) {
+			envs = append(envs, env)
+		}
+	}
+	return envs, nil
+}
