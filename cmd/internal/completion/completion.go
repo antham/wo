@@ -1,6 +1,7 @@
 package completion
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/antham/wo/workspace"
@@ -36,7 +37,11 @@ func (c Completion) FindCommands(workspace string, toComplete string) ([]string,
 	cs := []string{}
 	for _, c := range w.Commands {
 		if strings.HasPrefix(c.Command, toComplete) {
-			cs = append(cs, c.Command)
+			s := c.Command
+			if c.Description != "" {
+				s = fmt.Sprintf("%s\t%s", c.Command, c.Description)
+			}
+			cs = append(cs, s)
 		}
 	}
 	return cs, nil
