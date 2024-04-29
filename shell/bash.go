@@ -16,7 +16,7 @@ func newBashParser() *bashParser {
 		DefineTokens(tokenCurlyClose, []string{"}"}).
 		DefineTokens(tokenParenOpen, []string{"("}).
 		DefineTokens(tokenParenClose, []string{")"}).
-		DefineTokens(tokenFunction, []string{"function "}).
+		DefineTokens(tokenFunction, []string{"function"}).
 		DefineTokens(tokenComment, []string{"#"})
 	return bashParser
 }
@@ -47,7 +47,11 @@ func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) ([]Function, er
 			currentToken := stream.CurrentToken()
 			acc := ""
 			for {
-				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == tokenFunction {
+				if stream.CurrentToken().Line() != currentToken.Line() ||
+					// We check if the function keyword is at the beginning of the line
+					// and if the next token after the word function is directly attached to
+					// the word or if there is a space
+					(stream.CurrentToken().Key() == tokenFunction && stream.CurrentToken().Offset()+len(stream.CurrentToken().ValueString()) != stream.NextToken().Offset() && stream.CurrentToken().Line() != stream.PrevToken().Line()) {
 					break
 				}
 				acc = stream.CurrentToken().ValueString() + acc

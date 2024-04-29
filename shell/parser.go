@@ -1,8 +1,6 @@
 package shell
 
 import (
-	"strings"
-
 	"github.com/bzick/tokenizer"
 )
 
@@ -57,7 +55,6 @@ func Parse(shell string, content []byte) ([]Function, error) {
 	}
 	fs := []Function{}
 	for _, f := range data {
-		f.Description = strings.ReplaceAll(f.Description, "function ", "function")
 		fs = append(fs, f)
 	}
 	return fs, nil

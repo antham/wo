@@ -26,10 +26,12 @@ function f4 --description "f4 description comment";echo e; end
 function f5 -d "f5 description comment";echo e; end
 
 function f6;echo e; end
+
+function f7 -d "function to do something";echo e; end
 `))
 	functions := data
 	assert.NoError(t, err)
-	assert.Len(t, functions, 6)
+	assert.Len(t, functions, 7)
 	assert.Equal(t, []Function{
 		{Name: "f1", Description: "f1 description comment"},
 		{Name: "f2"},
@@ -37,5 +39,6 @@ function f6;echo e; end
 		{Name: "f4", Description: "f4 description comment"},
 		{Name: "f5", Description: "f5 description comment"},
 		{Name: "f6"},
+		{Name: "f7", Description: "function to do something"},
 	}, functions)
 }
