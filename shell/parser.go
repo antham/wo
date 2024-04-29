@@ -31,33 +31,29 @@ type Function struct {
 }
 
 func Parse(shell string, content []byte) ([]Function, error) {
-	var data []Function
+	var functions []Function
 	var err error
 	switch shell {
 	case string(zsh):
 		p := newZshParser()
-		data, err = p.parse(content)
+		functions, err = p.parse(content)
 		if err != nil {
 			return []Function{}, nil
 		}
 	case string(bash):
 		p := newBashParser()
-		data, err = p.parse(content)
+		functions, err = p.parse(content)
 		if err != nil {
 			return []Function{}, nil
 		}
 	case string(fish):
 		p := newFishParser()
-		data, err = p.parse(content)
+		functions, err = p.parse(content)
 		if err != nil {
 			return []Function{}, nil
 		}
 	}
-	fs := []Function{}
-	for _, f := range data {
-		fs = append(fs, f)
-	}
-	return fs, nil
+	return functions, nil
 }
 
 func createDescription(descriptionTokens []*tokenizer.Token) string {

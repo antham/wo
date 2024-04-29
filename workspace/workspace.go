@@ -20,13 +20,13 @@ import (
 const configDir = ".config/wo"
 
 type Workspace struct {
-	Name     string
-	Commands []Command
-	Envs     []string
+	Name      string
+	Functions []Function
+	Envs      []string
 }
 
-type Command struct {
-	Command     string
+type Function struct {
+	Function    string
 	Description string
 }
 
@@ -100,20 +100,20 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	commands := []Command{}
+	commands := []Function{}
 	for _, f := range funcs {
-		commands = append(commands, Command{
-			Command:     f.Name,
+		commands = append(commands, Function{
+			Function:    f.Name,
 			Description: f.Description,
 		})
 	}
-	slices.SortFunc(commands, func(a, b Command) int {
-		return cmp.Compare(a.Command, b.Command)
+	slices.SortFunc(commands, func(a, b Function) int {
+		return cmp.Compare(a.Function, b.Function)
 	})
 	return Workspace{
-		Name:     name,
-		Commands: commands,
-		Envs:     envs,
+		Name:      name,
+		Functions: commands,
+		Envs:      envs,
 	}, nil
 }
 

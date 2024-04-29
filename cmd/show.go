@@ -42,13 +42,13 @@ var showCmd = &cobra.Command{
 		}
 		functionRowTableSize := []int{10, 12}
 		fs := [][]string{}
-		for _, c := range wo.Commands {
+		for _, c := range wo.Functions {
 			if c.Description == "" {
 				c.Description = "-"
 			}
-			fs = append(fs, []string{c.Command, c.Description})
-			if len(c.Command)+1 > functionRowTableSize[0] {
-				functionRowTableSize[0] = len(c.Command) + 1
+			fs = append(fs, []string{c.Function, c.Description})
+			if len(c.Function)+1 > functionRowTableSize[0] {
+				functionRowTableSize[0] = len(c.Function) + 1
 			}
 			if len(c.Description)+1 > functionRowTableSize[1] {
 				functionRowTableSize[1] = len(c.Description) + 1

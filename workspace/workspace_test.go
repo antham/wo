@@ -118,9 +118,9 @@ func TestList(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Len(t, ws, 3)
 				assert.Equal(t, []Workspace{
-					{Name: "api", Commands: []Command{}, Envs: []string{"dev"}},
-					{Name: "db", Commands: []Command{}, Envs: []string{"staging"}},
-					{Name: "front", Commands: []Command{}, Envs: []string{"prod"}},
+					{Name: "api", Functions: []Function{}, Envs: []string{"dev"}},
+					{Name: "db", Functions: []Function{}, Envs: []string{"staging"}},
+					{Name: "front", Functions: []Function{}, Envs: []string{"prod"}},
 				}, ws)
 			},
 		},
@@ -176,16 +176,16 @@ test_func2() {
 			},
 			func(w Workspace, err error) {
 				assert.NoError(t, err)
-				assert.Len(t, w.Commands, 2)
+				assert.Len(t, w.Functions, 2)
 				assert.Equal(t, Workspace{
 					Name: "front",
-					Commands: []Command{
+					Functions: []Function{
 						{
-							Command:     "test_func1",
+							Function:    "test_func1",
 							Description: "A function 1",
 						},
 						{
-							Command:     "test_func2",
+							Function:    "test_func2",
 							Description: "A function 2",
 						},
 					},

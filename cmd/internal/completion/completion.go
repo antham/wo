@@ -29,22 +29,22 @@ func (c Completion) FindWorkspaces(toComplete string) ([]string, error) {
 	return ws, nil
 }
 
-func (c Completion) FindCommands(workspace string, toComplete string) ([]string, error) {
+func (c Completion) FindFunctions(workspace string, toComplete string) ([]string, error) {
 	w, err := c.workspaceManager.Get(workspace)
 	if err != nil {
 		return []string{}, err
 	}
-	cs := []string{}
-	for _, c := range w.Commands {
-		if strings.HasPrefix(c.Command, toComplete) {
-			s := c.Command
-			if c.Description != "" {
-				s = fmt.Sprintf("%s\t%s", c.Command, c.Description)
+	fs := []string{}
+	for _, f := range w.Functions {
+		if strings.HasPrefix(f.Function, toComplete) {
+			s := f.Function
+			if f.Description != "" {
+				s = fmt.Sprintf("%s\t%s", f.Function, f.Description)
 			}
-			cs = append(cs, s)
+			fs = append(fs, s)
 		}
 	}
-	return cs, nil
+	return fs, nil
 }
 
 func (c Completion) FindEnvs(workspace string, toComplete string) ([]string, error) {

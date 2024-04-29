@@ -26,7 +26,7 @@ var runCmd = &cobra.Command{
 			}
 			return workspaces, cobra.ShellCompDirectiveNoFileComp
 		case 1:
-			commands, err := c.FindCommands(args[0], toComplete)
+			commands, err := c.FindFunctions(args[0], toComplete)
 			if err != nil {
 				return []string{}, cobra.ShellCompDirectiveNoFileComp
 			}
