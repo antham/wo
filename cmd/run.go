@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/antham/wo/cmd/internal/completion"
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
@@ -39,7 +42,11 @@ var runCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		return w.RunFunction(args[0], env, args[1:])
+		err = w.RunFunction(args[0], env, args[1:])
+		if exitError, ok := err.(*exec.ExitError); ok {
+			os.Exit(exitError.ExitCode())
+		}
+		return nil
 	},
 }
 
