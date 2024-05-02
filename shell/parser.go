@@ -23,6 +23,7 @@ const (
 	zsh  shellStr = "zsh"
 	bash shellStr = "bash"
 	fish shellStr = "fish"
+	sh   shellStr = "sh"
 )
 
 type Function struct {
@@ -40,7 +41,7 @@ func Parse(shell string, content []byte) ([]Function, error) {
 		if err != nil {
 			return []Function{}, nil
 		}
-	case string(bash):
+	case string(bash), string(sh):
 		p := newBashParser()
 		functions, err = p.parse(content)
 		if err != nil {
