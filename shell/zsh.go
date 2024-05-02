@@ -16,7 +16,7 @@ func newZshParser() *zshParser {
 		DefineTokens(tokenCurlyClose, []string{"}"}).
 		DefineTokens(tokenParenOpen, []string{"("}).
 		DefineTokens(tokenParenClose, []string{")"}).
-		DefineTokens(tokenFunction, []string{"function "}).
+		DefineTokens(tokenFunction, []string{"function"}).
 		DefineTokens(tokenComment, []string{"#"})
 	return zshParser
 }
@@ -47,7 +47,7 @@ func (zshParser *zshParser) analyzer(stream *tokenizer.Stream) ([]Function, erro
 			currentToken := stream.CurrentToken()
 			acc := ""
 			for {
-				if stream.CurrentToken().Line() != currentToken.Line() || stream.CurrentToken().Key() == tokenFunction {
+				if stream.CurrentToken().Line() != currentToken.Line() || (stream.CurrentToken().Key() == tokenFunction && stream.CurrentToken().Offset()+len(stream.CurrentToken().ValueString()) != stream.NextToken().Offset() && stream.CurrentToken().Line() != stream.PrevToken().Line()) {
 					break
 				}
 				acc = stream.CurrentToken().ValueString() + acc
