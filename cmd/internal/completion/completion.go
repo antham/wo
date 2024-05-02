@@ -3,15 +3,13 @@ package completion
 import (
 	"fmt"
 	"strings"
-
-	"github.com/antham/wo/workspace"
 )
 
 type Completion struct {
-	workspaceManager workspace.WorkspaceManager
+	workspaceManager workspaceManager
 }
 
-func New(workspaceManager workspace.WorkspaceManager) Completion {
+func New(workspaceManager workspaceManager) Completion {
 	return Completion{workspaceManager: workspaceManager}
 }
 
