@@ -18,6 +18,12 @@ import (
 )
 
 const configDir = ".config/wo"
+const envVariablePrefix = "WO"
+
+const bash = "bash"
+const fish = "fish"
+const sh = "sh"
+const zsh = "zsh"
 
 type Workspace struct {
 	Name      string
@@ -130,15 +136,23 @@ func (s WorkspaceManager) Edit(name string) error {
 }
 
 func (s WorkspaceManager) EditEnv(name string, env string) error {
+	err := s.createWorkspaceEnvFolder(name)
+	if err != nil {
+		return err
+	}
+	err = s.createWorkspaceDefaultEnv(name)
+	if err != nil {
+		return err
+	}
 	return s.edit(s.resolveWorkspaceEnvFile(name, env))
 }
 
 func (s WorkspaceManager) Load(name string, env string) error {
-	return s.execCommand(s.appendLoadStatement(name, env)...)
+	return s.execCommand(s.appendLoadStatement(name, env, []string{})...)
 }
 
 func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs []string) error {
-	return s.execCommand(s.appendLoadStatement(name, env, "-c", strings.Join(functionAndArgs, " "))...)
+	return s.execCommand(s.appendLoadStatement(name, env, functionAndArgs)...)
 }
 
 func (s WorkspaceManager) Remove(name string) error {
@@ -149,15 +163,31 @@ func (s WorkspaceManager) Remove(name string) error {
 	return errors.Join(os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
 }
 
-func (s WorkspaceManager) appendLoadStatement(name string, env string, cmds ...string) []string {
-	stmts := []string{}
+func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
+	data := []string{}
+	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
+	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_ENV", envVariablePrefix), s.resolveEnv(env)))
 	envFile := s.resolveWorkspaceEnvFile(name, env)
 	_, eerr := os.Stat(envFile)
 	if eerr == nil {
-		stmts = append(stmts, "-C", fmt.Sprintf("source %s", envFile))
+		data = append(data, fmt.Sprintf("source %s", envFile))
 	}
-	stmts = append(stmts, "-C", fmt.Sprintf("source %s", s.resolveFunctionFile(name)))
-	stmts = append(stmts, cmds...)
+	data = append(data, fmt.Sprintf("source %s", s.resolveFunctionFile(name)))
+	stmts := []string{}
+	switch s.shell {
+	case bash, sh, zsh:
+		if len(functionAndArgs) > 0 {
+			data = append(data, strings.Join(functionAndArgs, " "))
+		}
+		stmts = append(stmts, "-c", strings.Join(data, " && "))
+	case fish:
+		for _, d := range data {
+			stmts = append(stmts, "-C", d)
+		}
+		if len(functionAndArgs) > 0 {
+			stmts = append(stmts, "-c", strings.Join(functionAndArgs, " "))
+		}
+	}
 	return stmts
 }
 
@@ -199,7 +229,7 @@ func (s WorkspaceManager) resolveWorkspaceEnvFile(name string, env string) strin
 }
 
 func (s WorkspaceManager) getExtension() string {
-	for _, shell := range []string{"fish", "bash", "zsh", "sh"} {
+	for _, shell := range []string{fish, bash, zsh, sh} {
 		if strings.Contains(s.shellBin, shell) {
 			return shell
 		}
@@ -234,6 +264,16 @@ func (s WorkspaceManager) getEnvDir() string {
 
 func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
 	return fmt.Sprintf("%s/%s", s.getEnvDir(), name)
+}
+
+func (s WorkspaceManager) createEnvVariableStatement(name string, value string) string {
+	switch s.shell {
+	case bash, sh, zsh:
+		return fmt.Sprintf("export %s=%s", name, value)
+	case fish:
+		return fmt.Sprintf("set -x -g %s %s", name, value)
+	}
+	return ""
 }
 
 func execCommand(shellBin string) func(args ...string) error {

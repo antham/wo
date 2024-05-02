@@ -294,24 +294,49 @@ func TestLoad(t *testing.T) {
 	}
 	scenarios := []scenario{
 		{
-			"Load workspace",
+			"Load workspace with a bash shell",
 			"",
 			func() {
+				os.Setenv("SHELL", "bash")
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
+				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=default && source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
 			},
 		},
 		{
-			"Load workspace with an env defined",
+			"Load workspace with a fish shell",
+			"",
+			func() {
+				os.Setenv("SHELL", "fish")
+			},
+			func(args []string) {
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", "source " + getHomePath(t) + "/.config/wo/functions/fish/test.fish"}, args)
+			},
+		},
+		{
+			"Load workspace with an env defined and a bash shell",
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/bash"
 				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
 				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
+				os.Setenv("SHELL", "bash")
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
+				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=prod && source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash && source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash"}, args)
+			},
+		},
+		{
+			"Load workspace with an env defined and a fish shell",
+			"prod",
+			func() {
+				envPath := getConfigPath(t) + "/envs/fish"
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0777))
+				os.Setenv("SHELL", "fish")
+			},
+			func(args []string) {
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", "source " + getHomePath(t) + "/.config/wo/envs/fish/test/prod.fish", "-C", "source " + getHomePath(t) + "/.config/wo/functions/fish/test.fish"}, args)
 			},
 		},
 	}
@@ -320,7 +345,8 @@ func TestLoad(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			os.Setenv("VISUAL", "emacs")
 			os.Setenv("EDITOR", "emacs")
-			os.Setenv("SHELL", "bash")
+			os.Unsetenv("SHELL")
+			s.setup()
 			w, err := NewWorkspaceManager()
 			args := []string{}
 			w.execCommand = func(a ...string) error {
@@ -328,7 +354,6 @@ func TestLoad(t *testing.T) {
 				return nil
 			}
 			assert.NoError(t, err)
-			s.setup()
 			assert.NoError(t, w.Load("test", s.env))
 			s.test(args)
 		})
@@ -345,35 +370,63 @@ func TestRunFunction(t *testing.T) {
 	}
 	scenarios := []scenario{
 		{
-			"Run function",
+			"Run a function with a bash shell",
 			[]string{"run-db"},
 			"",
 			func() {
+				os.Setenv("SHELL", "/bin/bash")
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash", "-c", "run-db"}, args)
+				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=default && source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash && run-db"}, args)
 			},
 		},
 		{
-			"Run a function with an env defined",
-			[]string{"run-db", "--watch"},
+			"Run a function with a fish shell",
+			[]string{"run-db"},
+			"",
+			func() {
+				os.Setenv("SHELL", "/bin/fish")
+			},
+			func(args []string) {
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", "source " + getHomePath(t) + "/.config/wo/functions/fish/test.fish", "-c", "run-db"}, args)
+			},
+		},
+		{
+			"Run a function with an env defined and a bash shell",
+			[]string{"run-db", "watch"},
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/bash"
 				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
 				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
+				os.Setenv("SHELL", "/bin/bash")
 			},
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash", "-C", "source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash", "-c", "run-db --watch"}, args)
+				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=prod && source " + getHomePath(t) + "/.config/wo/envs/bash/test/prod.bash && source " + getHomePath(t) + "/.config/wo/functions/bash/test.bash && run-db watch"}, args)
+			},
+		},
+		{
+			"Run a function with an env defined and a fish shell",
+			[]string{"run-db", "watch"},
+			"prod",
+			func() {
+				envPath := getConfigPath(t) + "/envs/fish"
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0777))
+				os.Setenv("SHELL", "/bin/fish")
+			},
+			func(args []string) {
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", "source " + getHomePath(t) + "/.config/wo/envs/fish/test/prod.fish", "-C", "source " + getHomePath(t) + "/.config/wo/functions/fish/test.fish", "-c", "run-db watch"}, args)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
+			os.Unsetenv("SHELL")
 			os.Setenv("VISUAL", "emacs")
 			os.Setenv("EDITOR", "emacs")
-			os.Setenv("SHELL", "bash")
+			s.setup()
 			w, err := NewWorkspaceManager()
 			args := []string{}
 			w.execCommand = func(a ...string) error {
@@ -381,7 +434,6 @@ func TestRunFunction(t *testing.T) {
 				return nil
 			}
 			assert.NoError(t, err)
-			s.setup()
 			assert.NoError(t, w.RunFunction("test", s.env, s.functionAndArgs))
 			s.test(args)
 		})
