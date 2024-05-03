@@ -69,5 +69,4 @@ function f2 () {
 		{Name: "f1", Description: "This is a function to run"},
 		{Name: "f2", Description: ""},
 	})
-
 }

@@ -4,8 +4,7 @@ import (
 	"regexp"
 )
 
-type fishParser struct {
-}
+type fishParser struct{}
 
 func newFishParser() *fishParser {
 	return &fishParser{}

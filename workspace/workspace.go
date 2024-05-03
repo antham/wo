@@ -17,13 +17,17 @@ import (
 	"github.com/antham/wo/shell"
 )
 
-const configDir = ".config/wo"
-const envVariablePrefix = "WO"
+const (
+	configDir         = ".config/wo"
+	envVariablePrefix = "WO"
+)
 
-const bash = "bash"
-const fish = "fish"
-const sh = "sh"
-const zsh = "zsh"
+const (
+	bash = "bash"
+	fish = "fish"
+	sh   = "sh"
+	zsh  = "zsh"
+)
 
 type Workspace struct {
 	Name      string
@@ -238,15 +242,15 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.getConfigDir(), 0777), os.MkdirAll(s.getFunctionDir(), 0777), os.MkdirAll(s.getEnvDir(), 0777))
+	return errors.Join(os.MkdirAll(s.getConfigDir(), 0o777), os.MkdirAll(s.getFunctionDir(), 0o777), os.MkdirAll(s.getEnvDir(), 0o777))
 }
 
 func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
-	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0777)
+	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0o777)
 }
 
 func (s WorkspaceManager) createWorkspaceDefaultEnv(name string) error {
-	_, err := os.OpenFile(s.resolveWorkspaceEnvFile(name, "default"), os.O_CREATE, 0666)
+	_, err := os.OpenFile(s.resolveWorkspaceEnvFile(name, "default"), os.O_CREATE, 0o666)
 	return err
 }
 

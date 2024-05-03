@@ -69,7 +69,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 			s.test(NewWorkspaceManager())
 		})
 	}
-
 }
 
 func TestList(t *testing.T) {
@@ -83,7 +82,7 @@ func TestList(t *testing.T) {
 			"Invalid function file",
 			func() {
 				path := getConfigPath(t) + "/functions/bash"
-				assert.NoError(t, os.WriteFile(path+"/front", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(path+"/front", []byte{}, 0o777))
 			},
 			func(ws []Workspace, err error) {
 				assert.ErrorContains(t, err, "the workspace does not exist")
@@ -102,17 +101,17 @@ func TestList(t *testing.T) {
 			"Get all workspaces ordered alphabetically",
 			func() {
 				functionPath := getConfigPath(t) + "/functions/bash"
-				assert.NoError(t, os.WriteFile(functionPath+"/front.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(functionPath+"/api.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(functionPath+"/db.bash", []byte{}, 0777))
+				assert.NoError(t, os.WriteFile(functionPath+"/front.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(functionPath+"/api.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(functionPath+"/db.bash", []byte{}, 0o777))
 
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/front", 0777))
-				assert.NoError(t, os.MkdirAll(envPath+"/api", 0777))
-				assert.NoError(t, os.MkdirAll(envPath+"/db", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/api/dev.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/db/staging.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/front", 0o777))
+				assert.NoError(t, os.MkdirAll(envPath+"/api", 0o777))
+				assert.NoError(t, os.MkdirAll(envPath+"/db", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/api/dev.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/db/staging.bash", []byte{}, 0o777))
 			},
 			func(ws []Workspace, err error) {
 				assert.NoError(t, err)
@@ -168,11 +167,11 @@ test_func1() {
 test_func2() {
 
 }
-`), 0777))
+`), 0o777))
 
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/front", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte(``), 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/front", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte(``), 0o777))
 			},
 			func(w Workspace, err error) {
 				assert.NoError(t, err)
@@ -206,7 +205,6 @@ test_func2() {
 			s.test(w.Get("front"))
 		})
 	}
-
 }
 
 func TestEdit(t *testing.T) {
@@ -318,8 +316,8 @@ func TestLoad(t *testing.T) {
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0o777))
 				os.Setenv("SHELL", "bash")
 			},
 			func(args []string) {
@@ -331,8 +329,8 @@ func TestLoad(t *testing.T) {
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/fish"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0o777))
 				os.Setenv("SHELL", "fish")
 			},
 			func(args []string) {
@@ -397,8 +395,8 @@ func TestRunFunction(t *testing.T) {
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0o777))
 				os.Setenv("SHELL", "/bin/bash")
 			},
 			func(args []string) {
@@ -411,8 +409,8 @@ func TestRunFunction(t *testing.T) {
 			"prod",
 			func() {
 				envPath := getConfigPath(t) + "/envs/fish"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
+				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0o777))
 				os.Setenv("SHELL", "/bin/fish")
 			},
 			func(args []string) {
@@ -462,13 +460,13 @@ func TestRemove(t *testing.T) {
 			"test",
 			func() {
 				path := getConfigPath(t)
-				assert.NoError(t, os.MkdirAll(path+"/envs/bash/test", 0777))
-				assert.NoError(t, os.MkdirAll(path+"/envs/bash/front", 0777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/prod.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/dev.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/front/dev.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/functions/bash/front.bash", []byte{}, 0777))
-				assert.NoError(t, os.WriteFile(path+"/functions/bash/test.bash", []byte{}, 0777))
+				assert.NoError(t, os.MkdirAll(path+"/envs/bash/test", 0o777))
+				assert.NoError(t, os.MkdirAll(path+"/envs/bash/front", 0o777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/prod.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/dev.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(path+"/envs/bash/front/dev.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(path+"/functions/bash/front.bash", []byte{}, 0o777))
+				assert.NoError(t, os.WriteFile(path+"/functions/bash/test.bash", []byte{}, 0o777))
 			},
 			func(e error) {
 				assert.NoError(t, e)
