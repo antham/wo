@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/antham/wo/cmd/internal/completion"
-	"github.com/antham/wo/workspace"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/spf13/cobra"
@@ -95,9 +93,5 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 }
 
 func init() {
-	w, err := workspace.NewWorkspaceManager()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rootCmd.AddCommand(newShowCmd(w))
+	rootCmd.AddCommand(newShowCmd(newWorkspaceManager()))
 }

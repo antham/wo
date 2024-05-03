@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"log"
 	"os"
 	"os/exec"
 
 	"github.com/antham/wo/cmd/internal/completion"
-	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -45,11 +43,7 @@ func newRunCmd(workspaceManager workspaceManager) *cobra.Command {
 }
 
 func init() {
-	w, err := workspace.NewWorkspaceManager()
-	if err != nil {
-		log.Fatal(err)
-	}
-	runCmd := newRunCmd(w)
+	runCmd := newRunCmd(newWorkspaceManager())
 	runCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")
 	rootCmd.AddCommand(runCmd)
 }

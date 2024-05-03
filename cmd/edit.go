@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/antham/wo/cmd/internal/completion"
-	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -44,9 +41,7 @@ func newEditCmd(workspaceManager workspaceManager) *cobra.Command {
 }
 
 func init() {
-	w, err := workspace.NewWorkspaceManager()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rootCmd.AddCommand(newEditCmd(w))
+	rootCmd.AddCommand(
+		newEditCmd(newWorkspaceManager()),
+	)
 }

@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"log"
-
 	"github.com/antham/wo/cmd/internal/completion"
-	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -32,9 +29,5 @@ func newRemoveCmd(workspaceManager workspaceManager) *cobra.Command {
 }
 
 func init() {
-	w, err := workspace.NewWorkspaceManager()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rootCmd.AddCommand(newRemoveCmd(w))
+	rootCmd.AddCommand(newRemoveCmd(newWorkspaceManager()))
 }

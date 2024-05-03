@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	configDir         = ".config/wo"
+	defaultConfigDir  = ".config/wo"
 	envVariablePrefix = "WO"
 )
 
@@ -44,31 +44,49 @@ type WorkspaceManager struct {
 	editor      string
 	shellBin    string
 	shell       string
-	homeDir     string
+	configDir   string
 	execCommand func(...string) error
 }
 
-func NewWorkspaceManager() (WorkspaceManager, error) {
-	editor := os.Getenv("EDITOR")
-	visual := os.Getenv("VISUAL")
-	s := WorkspaceManager{}
-	switch {
-	case editor != "":
-		s.editor = editor
-	case visual != "":
-		s.editor = visual
-	default:
-		return WorkspaceManager{}, errors.New("no VISUAL or EDITOR environment variable found")
-	}
-	s.shellBin = os.Getenv("SHELL")
-	s.shell = path.Base(s.shellBin)
+func NewWorkspaceManager(options ...func(*WorkspaceManager)) (WorkspaceManager, error) {
+	w := WorkspaceManager{}
 	usr, err := user.Current()
 	if err != nil {
 		return WorkspaceManager{}, err
 	}
-	s.homeDir = usr.HomeDir
-	s.execCommand = execCommand(s.shellBin)
-	return s, s.createConfigFolder()
+	w.configDir = fmt.Sprintf("%s/%s", usr.HomeDir, defaultConfigDir)
+	for _, o := range options {
+		o(&w)
+	}
+	if w.editor == "" {
+		return WorkspaceManager{}, errors.New("no editor defined")
+	}
+	w.execCommand = execCommand(w.shellBin)
+	return w, w.createConfigFolder()
+}
+
+func WithEditor(editor string, visual string) func(*WorkspaceManager) {
+	return func(w *WorkspaceManager) {
+		switch {
+		case editor != "":
+			w.editor = editor
+		case visual != "":
+			w.editor = visual
+		}
+	}
+}
+
+func WithShellPath(shell string) func(*WorkspaceManager) {
+	return func(w *WorkspaceManager) {
+		w.shellBin = shell
+		w.shell = path.Base(shell)
+	}
+}
+
+func WithConfigPath(path string) func(*WorkspaceManager) {
+	return func(w *WorkspaceManager) {
+		w.configDir = path
+	}
 }
 
 func (s WorkspaceManager) List() ([]Workspace, error) {
@@ -242,7 +260,7 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.getConfigDir(), 0o777), os.MkdirAll(s.getFunctionDir(), 0o777), os.MkdirAll(s.getEnvDir(), 0o777))
+	return errors.Join(os.MkdirAll(s.configDir, 0o777), os.MkdirAll(s.getFunctionDir(), 0o777), os.MkdirAll(s.getEnvDir(), 0o777))
 }
 
 func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
@@ -254,16 +272,12 @@ func (s WorkspaceManager) createWorkspaceDefaultEnv(name string) error {
 	return err
 }
 
-func (s WorkspaceManager) getConfigDir() string {
-	return fmt.Sprintf("%s/%s", s.homeDir, configDir)
-}
-
 func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions/%s", s.getConfigDir(), s.shell)
+	return fmt.Sprintf("%s/functions/%s", s.configDir, s.shell)
 }
 
 func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs/%s", s.getConfigDir(), s.shell)
+	return fmt.Sprintf("%s/envs/%s", s.configDir, s.shell)
 }
 
 func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
