@@ -18,16 +18,17 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			wss := []string{}
+			wss := [][]string{}
 			workspaceRowTableSize := 11
 			for _, w := range workspaces {
 				if len(w.Name)+1 > workspaceRowTableSize {
 					workspaceRowTableSize = len(w.Name) + 1
 				}
-				wss = append(wss, w.Name)
+				wss = append(wss, []string{w.Name})
 			}
 			ws := table.New().
 				Border(lipgloss.NormalBorder()).
+				BorderRow(true).
 				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
 				Headers("Workspaces").
 				StyleFunc(func(row, col int) lipgloss.Style {
@@ -39,7 +40,7 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 					style = style.Copy().Width(workspaceRowTableSize)
 					return style
 				}).
-				Rows([][]string{wss}...)
+				Rows(wss...)
 			fmt.Println(ws)
 			return nil
 		},

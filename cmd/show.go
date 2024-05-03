@@ -58,6 +58,7 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 				Render(fmt.Sprintf("Workspace %s", wo.Name))
 			functions := table.New().
 				Border(lipgloss.NormalBorder()).
+				BorderRow(true).
 				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
 				Headers("Functions", "Description").
 				StyleFunc(func(row, col int) lipgloss.Style {
@@ -72,6 +73,7 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 				Rows(fs...)
 			envs := table.New().
 				Border(lipgloss.NormalBorder()).
+				BorderRow(true).
 				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
 				Headers("Envs").
 				StyleFunc(func(row, col int) lipgloss.Style {
