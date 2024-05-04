@@ -293,11 +293,11 @@ func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
 }
 
 func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions/%s", s.configDir, s.shell)
+	return fmt.Sprintf("%s/functions", s.configDir)
 }
 
 func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs/%s", s.configDir, s.shell)
+	return fmt.Sprintf("%s/envs", s.configDir)
 }
 
 func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
