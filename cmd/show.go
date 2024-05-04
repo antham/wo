@@ -39,23 +39,26 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 				Render(fmt.Sprintf("Workspace %s", wo.Name))
 			functionTitle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
-				Height(2).
 				Render("Functions")
 			var functions []string
 			for _, f := range wo.Functions {
+				description := ""
+				if f.Description != "" {
+					description = lipgloss.NewStyle().
+						Foreground(lipgloss.Color("#8ECDDD")).
+						Render(fmt.Sprintf(" : %s", f.Description))
+				}
 				functions = append(
 					functions,
 					fmt.Sprintf(
-						"%s %s %s",
+						"%s %s%s",
 						lipgloss.NewStyle().
 							Foreground(lipgloss.Color("#8ECDDD")).
-							Render("•"),
+							Render("*"),
 						lipgloss.NewStyle().
 							Foreground(lipgloss.Color("#FFFADD")).
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#8ECDDD")).
-							Render(fmt.Sprintf(": %s", f.Description)),
 							Render(f.Name),
+						description,
 					),
 				)
 			}
@@ -66,26 +69,27 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 			}
 			envTitle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
-				Height(2).
 				Render("Envs")
 			var envs []string
 			for _, e := range wo.Envs {
 				envs = append(envs, lipgloss.NewStyle().
 					Foreground(lipgloss.Color("#8ECDDD")).
-					Render(fmt.Sprintf("• %s", e)))
+					Render(fmt.Sprintf("* %s", e)))
 			}
 			if len(wo.Envs) == 0 {
 				envs = append(envs, lipgloss.NewStyle().
 					Foreground(lipgloss.Color("#8ECDDD")).
 					Render("No envs defined"))
 			}
-			fmt.Println(title)
-			fmt.Println(separator)
-			fmt.Println(functionTitle)
-			fmt.Println(strings.Join(functions, "\n"))
-			fmt.Println(separator)
-			fmt.Println(envTitle)
-			fmt.Println(strings.Join(envs, "\n"))
+			cmd.Println(title)
+			cmd.Println(separator)
+			cmd.Println(functionTitle)
+			cmd.Println()
+			cmd.Println(strings.Join(functions, "\n"))
+			cmd.Println(separator)
+			cmd.Println(envTitle)
+			cmd.Println()
+			cmd.Println(strings.Join(envs, "\n"))
 			return nil
 		},
 	}
