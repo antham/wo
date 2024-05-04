@@ -442,7 +442,7 @@ func TestRunFunction(t *testing.T) {
 			"prod",
 			"/bin/bash",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source "+getConfigPath(t)+"/envs/test/prod.bash && source %s/functions/test.bash && run-db watch", getConfigPath(t))}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash && run-db watch", getConfigPath(t), getConfigPath(t))}, args)
 			},
 		},
 		{
