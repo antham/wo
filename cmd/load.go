@@ -7,8 +7,8 @@ import (
 
 var env string
 
-func newloadCmd(workspaceManager workspaceManager) *cobra.Command {
-	return &cobra.Command{
+func newLoadCmd(workspaceManager workspaceManager) *cobra.Command {
+	loadCmd := &cobra.Command{
 		Use:     "load workspace",
 		Aliases: []string{"l"},
 		Short:   "Load a workspace",
@@ -29,10 +29,6 @@ func newloadCmd(workspaceManager workspaceManager) *cobra.Command {
 			return workspaceManager.Load(args[0], env)
 		},
 	}
-}
-
-func init() {
-	loadCmd := newloadCmd(newWorkspaceManager())
 	loadCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")
-	rootCmd.AddCommand(loadCmd)
+	return loadCmd
 }

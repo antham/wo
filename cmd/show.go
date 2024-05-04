@@ -91,7 +91,3 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 		},
 	}
 }
-
-func init() {
-	rootCmd.AddCommand(newShowCmd(newWorkspaceManager()))
-}

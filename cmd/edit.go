@@ -39,9 +39,3 @@ func newEditCmd(workspaceManager workspaceManager) *cobra.Command {
 		},
 	}
 }
-
-func init() {
-	rootCmd.AddCommand(
-		newEditCmd(newWorkspaceManager()),
-	)
-}

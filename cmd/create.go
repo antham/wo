@@ -35,7 +35,3 @@ func newCreateCmd(workspaceManager workspaceManager) *cobra.Command {
 		},
 	}
 }
-
-func init() {
-	rootCmd.AddCommand(newCreateCmd(newWorkspaceManager()))
-}

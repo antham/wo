@@ -9,7 +9,7 @@ import (
 )
 
 func newRunCmd(workspaceManager workspaceManager) *cobra.Command {
-	return &cobra.Command{
+	runCmd := &cobra.Command{
 		Use:     "run workspace function [function-args]...",
 		Aliases: []string{"r"},
 		Short:   "Run a function in a given workspace",
@@ -40,10 +40,6 @@ func newRunCmd(workspaceManager workspaceManager) *cobra.Command {
 			return nil
 		},
 	}
-}
-
-func init() {
-	runCmd := newRunCmd(newWorkspaceManager())
 	runCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")
-	rootCmd.AddCommand(runCmd)
+	return runCmd
 }

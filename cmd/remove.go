@@ -27,7 +27,3 @@ func newRemoveCmd(workspaceManager workspaceManager) *cobra.Command {
 		},
 	}
 }
-
-func init() {
-	rootCmd.AddCommand(newRemoveCmd(newWorkspaceManager()))
-}
