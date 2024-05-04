@@ -52,10 +52,10 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 							Render("•"),
 						lipgloss.NewStyle().
 							Foreground(lipgloss.Color("#FFFADD")).
-							Render(f.Function),
 						lipgloss.NewStyle().
 							Foreground(lipgloss.Color("#8ECDDD")).
 							Render(fmt.Sprintf(": %s", f.Description)),
+							Render(f.Name),
 					),
 				)
 			}

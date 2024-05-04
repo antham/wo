@@ -34,10 +34,10 @@ func (c Completion) FindFunctions(workspace string, toComplete string) ([]string
 	}
 	fs := []string{}
 	for _, f := range w.Functions {
-		if strings.HasPrefix(f.Function, toComplete) {
-			s := f.Function
+		if strings.HasPrefix(f.Name, toComplete) {
+			s := f.Name
 			if f.Description != "" {
-				s = fmt.Sprintf("%s\t%s", f.Function, f.Description)
+				s = fmt.Sprintf("%s\t%s", f.Name, f.Description)
 			}
 			fs = append(fs, s)
 		}

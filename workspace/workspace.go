@@ -36,7 +36,7 @@ type Workspace struct {
 }
 
 type Function struct {
-	Function    string
+	Name        string
 	Description string
 }
 
@@ -131,12 +131,12 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	commands := []Function{}
 	for _, f := range funcs {
 		commands = append(commands, Function{
-			Function:    f.Name,
+			Name:        f.Name,
 			Description: f.Description,
 		})
 	}
 	slices.SortFunc(commands, func(a, b Function) int {
-		return cmp.Compare(a.Function, b.Function)
+		return cmp.Compare(a.Name, b.Name)
 	})
 	return Workspace{
 		Name:      name,

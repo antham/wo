@@ -167,11 +167,11 @@ test_func2() {
 					Name: "front",
 					Functions: []Function{
 						{
-							Function:    "test_func1",
+							Name:        "test_func1",
 							Description: "A function 1",
 						},
 						{
-							Function:    "test_func2",
+							Name:        "test_func2",
 							Description: "A function 2",
 						},
 					},
