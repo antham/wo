@@ -145,28 +145,48 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	}, nil
 }
 
-func (s WorkspaceManager) Edit(name string) error {
+func (s WorkspaceManager) Create(name string) error {
 	err := s.createWorkspaceEnvFolder(name)
 	if err != nil {
 		return err
 	}
-	err = s.createWorkspaceDefaultEnv(name)
+	err = s.createFile(s.resolveFunctionFile(name))
 	if err != nil {
 		return err
 	}
-	return s.edit(s.resolveFunctionFile(name))
+	return s.createFile(s.resolveEnvFile(name, s.resolveEnv("")))
+}
+
+func (s WorkspaceManager) CreateEnv(name string, env string) error {
+	functionFile := s.resolveFunctionFile(name)
+	_, err := os.Stat(functionFile)
+	if err != nil {
+		return fmt.Errorf(`check the workspace "%s" exists, create it first`, name)
+	}
+	return s.createFile(s.resolveEnvFile(name, env))
+}
+
+func (s WorkspaceManager) Edit(name string) error {
+	functionFile := s.resolveFunctionFile(name)
+	_, err := os.Stat(functionFile)
+	if err != nil {
+		return fmt.Errorf(`check the workspace "%s" exists`, name)
+	}
+	return s.editFile(functionFile)
 }
 
 func (s WorkspaceManager) EditEnv(name string, env string) error {
-	err := s.createWorkspaceEnvFolder(name)
+	functionFile := s.resolveFunctionFile(name)
+	_, err := os.Stat(functionFile)
 	if err != nil {
-		return err
+		return fmt.Errorf(`check the workspace "%s" exists`, name)
 	}
-	err = s.createWorkspaceDefaultEnv(name)
+	envFile := s.resolveEnvFile(name, env)
+	_, err = os.Stat(envFile)
 	if err != nil {
-		return err
+		return fmt.Errorf(`check the environment "%s" exists`, env)
 	}
-	return s.edit(s.resolveWorkspaceEnvFile(name, env))
+	return s.editFile(envFile)
 }
 
 func (s WorkspaceManager) Load(name string, env string) error {
@@ -189,7 +209,7 @@ func (s WorkspaceManager) appendLoadStatement(name string, env string, functionA
 	data := []string{}
 	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
 	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_ENV", envVariablePrefix), s.resolveEnv(env)))
-	envFile := s.resolveWorkspaceEnvFile(name, env)
+	envFile := s.resolveEnvFile(name, env)
 	_, eerr := os.Stat(envFile)
 	if eerr == nil {
 		data = append(data, fmt.Sprintf("source %s", envFile))
@@ -213,8 +233,13 @@ func (s WorkspaceManager) appendLoadStatement(name string, env string, functionA
 	return stmts
 }
 
-func (s WorkspaceManager) edit(filepath string) error {
+func (s WorkspaceManager) editFile(filepath string) error {
 	return s.execCommand("-c", fmt.Sprintf("%s %s", s.editor, filepath))
+}
+
+func (s WorkspaceManager) createFile(filepath string) error {
+	_, err := os.OpenFile(filepath, os.O_CREATE, 0o666)
+	return err
 }
 
 func (s WorkspaceManager) resolveEnv(env string) string {
@@ -246,7 +271,7 @@ func (s WorkspaceManager) resolveFunctionFile(name string) string {
 	return fmt.Sprintf("%s/%s.%s", s.getFunctionDir(), name, s.getExtension())
 }
 
-func (s WorkspaceManager) resolveWorkspaceEnvFile(name string, env string) string {
+func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
 	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvDir(name), s.resolveEnv(env), s.getExtension())
 }
 
@@ -265,11 +290,6 @@ func (s WorkspaceManager) createConfigFolder() error {
 
 func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
 	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0o777)
-}
-
-func (s WorkspaceManager) createWorkspaceDefaultEnv(name string) error {
-	_, err := os.OpenFile(s.resolveWorkspaceEnvFile(name, "default"), os.O_CREATE, 0o666)
-	return err
 }
 
 func (s WorkspaceManager) getFunctionDir() string {

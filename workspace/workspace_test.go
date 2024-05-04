@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -77,52 +78,36 @@ func TestNewWorkspaceManager(t *testing.T) {
 func TestList(t *testing.T) {
 	type scenario struct {
 		name  string
-		setup func()
-		test  func([]Workspace, error)
+		setup func(*testing.T, WorkspaceManager)
+		test  func(*testing.T, []Workspace, error)
 	}
 	scenarios := []scenario{
 		{
-			"Invalid function file",
-			func() {
-				path := getConfigPath(t) + "/functions/bash"
-				assert.NoError(t, os.WriteFile(path+"/front", []byte{}, 0o777))
-			},
-			func(ws []Workspace, err error) {
-				assert.ErrorContains(t, err, "the workspace does not exist")
-			},
-		},
-		{
 			"No workspace defined",
-			func() {
+			func(t *testing.T, w WorkspaceManager) {
 			},
-			func(ws []Workspace, err error) {
+			func(t *testing.T, ws []Workspace, err error) {
 				assert.NoError(t, err)
 				assert.Empty(t, ws)
 			},
 		},
 		{
 			"Get all workspaces ordered alphabetically",
-			func() {
-				functionPath := getConfigPath(t) + "/functions/bash"
-				assert.NoError(t, os.WriteFile(functionPath+"/front.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(functionPath+"/api.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(functionPath+"/db.bash", []byte{}, 0o777))
-
-				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/front", 0o777))
-				assert.NoError(t, os.MkdirAll(envPath+"/api", 0o777))
-				assert.NoError(t, os.MkdirAll(envPath+"/db", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/api/dev.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/db/staging.bash", []byte{}, 0o777))
+			func(t *testing.T, w WorkspaceManager) {
+				assert.NoError(t, w.Create("api"))
+				assert.NoError(t, w.CreateEnv("api", "dev"))
+				assert.NoError(t, w.Create("db"))
+				assert.NoError(t, w.CreateEnv("db", "staging"))
+				assert.NoError(t, w.Create("front"))
+				assert.NoError(t, w.CreateEnv("front", "prod"))
 			},
-			func(ws []Workspace, err error) {
+			func(t *testing.T, ws []Workspace, err error) {
 				assert.NoError(t, err)
 				assert.Len(t, ws, 3)
 				assert.Equal(t, []Workspace{
-					{Name: "api", Functions: []Function{}, Envs: []string{"dev"}},
-					{Name: "db", Functions: []Function{}, Envs: []string{"staging"}},
-					{Name: "front", Functions: []Function{}, Envs: []string{"prod"}},
+					{Name: "api", Functions: []Function{}, Envs: []string{"default", "dev"}},
+					{Name: "db", Functions: []Function{}, Envs: []string{"default", "staging"}},
+					{Name: "front", Functions: []Function{}, Envs: []string{"default", "prod"}},
 				}, ws)
 			},
 		},
@@ -132,8 +117,9 @@ func TestList(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			s.setup()
-			s.test(w.List())
+			s.setup(t, w)
+			workspaces, err := w.List()
+			s.test(t, workspaces, err)
 		})
 	}
 }
@@ -141,13 +127,13 @@ func TestList(t *testing.T) {
 func TestGet(t *testing.T) {
 	type scenario struct {
 		name  string
-		setup func()
+		setup func(*testing.T, WorkspaceManager)
 		test  func(Workspace, error)
 	}
 	scenarios := []scenario{
 		{
 			"Workspace does not exist",
-			func() {
+			func(t *testing.T, w WorkspaceManager) {
 			},
 			func(w Workspace, err error) {
 				assert.EqualError(t, err, "the workspace does not exist")
@@ -155,9 +141,14 @@ func TestGet(t *testing.T) {
 		},
 		{
 			"Get all workspace",
-			func() {
-				functionPath := getConfigPath(t) + "/functions/bash"
-				assert.NoError(t, os.WriteFile(functionPath+"/front.bash", []byte(`
+			func(t *testing.T, w WorkspaceManager) {
+				err := w.Create("front")
+				assert.NoError(t, err)
+				err = w.CreateEnv("front", "prod")
+				assert.NoError(t, err)
+
+				functionPath := getConfigPath(t) + "/functions/bash/front.bash"
+				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 # A function 1
 test_func1() {
 
@@ -168,10 +159,6 @@ test_func2() {
 
 }
 `), 0o777))
-
-				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/front", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/front/prod.bash", []byte(``), 0o777))
 			},
 			func(w Workspace, err error) {
 				assert.NoError(t, err)
@@ -188,7 +175,7 @@ test_func2() {
 							Description: "A function 2",
 						},
 					},
-					Envs: []string{"prod"},
+					Envs: []string{"default", "prod"},
 				}, w)
 			},
 		},
@@ -198,23 +185,102 @@ test_func2() {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			s.setup()
+			s.setup(t, w)
 			s.test(w.Get("front"))
+		})
+	}
+}
+
+func TestCreate(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T, WorkspaceManager)
+		test  func(error)
+	}
+	scenarios := []scenario{
+		{
+			"Create workspace",
+			func(t *testing.T, w WorkspaceManager) {
+			},
+			func(err error) {
+				assert.NoError(t, err)
+				path := getConfigPath(t)
+				envFile, err := os.Stat(path + "/envs/bash/test/default.bash")
+				assert.Equal(t, "default.bash", envFile.Name())
+				assert.NoError(t, err)
+				functionFile, err := os.Stat(path + "/functions/bash/test.bash")
+				assert.NoError(t, err)
+				assert.Equal(t, "test.bash", functionFile.Name())
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			os.RemoveAll(getConfigPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			s.setup(t, w)
+			assert.NoError(t, err)
+			s.test(w.Create("test"))
+		})
+	}
+}
+
+func TestCreateEnv(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T, WorkspaceManager)
+		test  func(error)
+	}
+	scenarios := []scenario{
+		{
+			"Create workspace env",
+			func(t *testing.T, w WorkspaceManager) {
+			},
+			func(err error) {
+				assert.NoError(t, err)
+				path := getConfigPath(t)
+				defaultEnvFile, err := os.Stat(path + "/envs/bash/test/default.bash")
+				assert.Equal(t, "default.bash", defaultEnvFile.Name())
+				assert.NoError(t, err)
+				prodEnvFile, err := os.Stat(path + "/envs/bash/test/prod.bash")
+				assert.Equal(t, "prod.bash", prodEnvFile.Name())
+				assert.NoError(t, err)
+				functionFile, err := os.Stat(path + "/functions/bash/test.bash")
+				assert.NoError(t, err)
+				assert.Equal(t, "test.bash", functionFile.Name())
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			os.RemoveAll(getConfigPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			s.setup(t, w)
+			assert.NoError(t, err)
+			assert.NoError(t, w.Create("test"))
+			s.test(w.CreateEnv("test", "prod"))
 		})
 	}
 }
 
 func TestEdit(t *testing.T) {
 	type scenario struct {
-		name string
-		test func([]string)
+		name  string
+		setup func(*testing.T, WorkspaceManager)
+		test  func([]string)
 	}
 	scenarios := []scenario{
 		{
 			"Edit workspace",
+			func(t *testing.T, w WorkspaceManager) {
+				err := w.Create("test")
+				assert.NoError(t, err)
+			},
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "emacs " + getConfigPath(t) + "/functions/bash/test.bash"}, args)
-				f, err := os.Stat(getConfigPath(t) + "/envs/bash/test/default.bash")
+				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/functions/bash/test.bash", getConfigPath(t))}, args)
+				f, err := os.Stat(fmt.Sprintf("%s/envs/bash/test/default.bash", getConfigPath(t)))
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", f.Name())
 			},
@@ -224,6 +290,8 @@ func TestEdit(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			s.setup(t, w)
 			args := []string{}
 			w.execCommand = func(a ...string) error {
 				args = a
@@ -247,14 +315,14 @@ func TestEditEnv(t *testing.T) {
 			"Edit default workspace",
 			"",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "emacs " + getConfigPath(t) + "/envs/bash/test/default.bash"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/envs/bash/test/default.bash", getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Edit prod workspace",
 			"prod",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "emacs " + getConfigPath(t) + "/envs/bash/test/prod.bash"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/envs/bash/test/prod.bash", getConfigPath(t))}, args)
 			},
 		},
 	}
@@ -262,6 +330,11 @@ func TestEditEnv(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("test")
+			assert.NoError(t, err)
+			err = w.CreateEnv("test", "prod")
+			assert.NoError(t, err)
 			args := []string{}
 			w.execCommand = func(a ...string) error {
 				args = a
@@ -278,62 +351,52 @@ func TestLoad(t *testing.T) {
 	type scenario struct {
 		name  string
 		env   string
-		setup func() string
+		shell string
 		test  func([]string)
 	}
 	scenarios := []scenario{
 		{
 			"Load workspace with a bash shell",
 			"",
-			func() string {
-				return "/bin/bash"
-			},
+			"/bin/bash",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=default && source " + getConfigPath(t) + "/functions/bash/test.bash"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/bash/test/default.bash && source %s/functions/bash/test.bash", getConfigPath(t), getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Load workspace with a fish shell",
 			"",
-			func() string {
-				return "/bin/fish"
-			},
+			"/bin/fish",
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", "source " + getConfigPath(t) + "/functions/fish/test.fish"}, args)
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/fish/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/fish/test.fish", getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Load workspace with an env defined and a bash shell",
 			"prod",
-			func() string {
-				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0o777))
-				return "/bin/bash"
-			},
+			"/bin/bash",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=prod && source " + getConfigPath(t) + "/envs/bash/test/prod.bash && source " + getConfigPath(t) + "/functions/bash/test.bash"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/bash/test/prod.bash && source %s/functions/bash/test.bash", getConfigPath(t), getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Load workspace with an env defined and a fish shell",
 			"prod",
-			func() string {
-				envPath := getConfigPath(t) + "/envs/fish"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0o777))
-				return "/bin/fish"
-			},
+			"/bin/fish",
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", "source " + getConfigPath(t) + "/envs/fish/test/prod.fish", "-C", "source " + getConfigPath(t) + "/functions/fish/test.fish"}, args)
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/fish/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/fish/test.fish", getConfigPath(t))}, args)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
-			shell := s.setup()
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(shell), WithConfigPath(getConfigPath(t)))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("test")
+			assert.NoError(t, err)
+			err = w.CreateEnv("test", "prod")
+			assert.NoError(t, err)
 			args := []string{}
 			w.execCommand = func(a ...string) error {
 				args = a
@@ -351,7 +414,7 @@ func TestRunFunction(t *testing.T) {
 		name            string
 		functionAndArgs []string
 		env             string
-		setup           func() string
+		shell           string
 		test            func([]string)
 	}
 	scenarios := []scenario{
@@ -359,58 +422,48 @@ func TestRunFunction(t *testing.T) {
 			"Run a function with a bash shell",
 			[]string{"run-db"},
 			"",
-			func() string {
-				return "/bin/bash"
-			},
+			"/bin/bash",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=default && source " + getConfigPath(t) + "/functions/bash/test.bash && run-db"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/bash/test/default.bash && source %s/functions/bash/test.bash && run-db", getConfigPath(t), getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Run a function with a fish shell",
 			[]string{"run-db"},
 			"",
-			func() string {
-				return "/bin/fish"
-			},
+			"/bin/fish",
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", "source " + getConfigPath(t) + "/functions/fish/test.fish", "-c", "run-db"}, args)
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/fish/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/fish/test.fish", getConfigPath(t)), "-c", "run-db"}, args)
 			},
 		},
 		{
 			"Run a function with an env defined and a bash shell",
 			[]string{"run-db", "watch"},
 			"prod",
-			func() string {
-				envPath := getConfigPath(t) + "/envs/bash"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.bash", []byte{}, 0o777))
-				return "/bin/bash"
-			},
+			"/bin/bash",
 			func(args []string) {
-				assert.Equal(t, []string{"-c", "export WO_NAME=test && export WO_ENV=prod && source " + getConfigPath(t) + "/envs/bash/test/prod.bash && source " + getConfigPath(t) + "/functions/bash/test.bash && run-db watch"}, args)
+				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source "+getConfigPath(t)+"/envs/bash/test/prod.bash && source %s/functions/bash/test.bash && run-db watch", getConfigPath(t))}, args)
 			},
 		},
 		{
 			"Run a function with an env defined and a fish shell",
 			[]string{"run-db", "watch"},
 			"prod",
-			func() string {
-				envPath := getConfigPath(t) + "/envs/fish"
-				assert.NoError(t, os.MkdirAll(envPath+"/test", 0o777))
-				assert.NoError(t, os.WriteFile(envPath+"/test/prod.fish", []byte{}, 0o777))
-				return "/bin/fish"
-			},
+			"/bin/fish",
 			func(args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", "source " + getConfigPath(t) + "/envs/fish/test/prod.fish", "-C", "source " + getConfigPath(t) + "/functions/fish/test.fish", "-c", "run-db watch"}, args)
+				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/fish/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/fish/test.fish", getConfigPath(t)), "-c", "run-db watch"}, args)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
-			shell := s.setup()
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(shell), WithConfigPath(getConfigPath(t)))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("test")
+			assert.NoError(t, err)
+			err = w.CreateEnv("test", "prod")
+			assert.NoError(t, err)
 			args := []string{}
 			w.execCommand = func(a ...string) error {
 				args = a
@@ -427,15 +480,12 @@ func TestRemove(t *testing.T) {
 	type scenario struct {
 		name      string
 		workspace string
-		setup     func()
 		test      func(error)
 	}
 	scenarios := []scenario{
 		{
 			"Remove an unexisting workspace",
 			"whatever",
-			func() {
-			},
 			func(e error) {
 				assert.Error(t, e)
 			},
@@ -443,17 +493,6 @@ func TestRemove(t *testing.T) {
 		{
 			"Remove a workspace",
 			"test",
-			func() {
-				path := getConfigPath(t)
-				assert.NoError(t, os.MkdirAll(path+"/envs/bash/test", 0o777))
-				assert.NoError(t, os.MkdirAll(path+"/envs/bash/front", 0o777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/prod.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/test/dev.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(path+"/envs/bash/front/dev.bash", []byte{}, 0o777))
-				assert.NoError(t, os.MkdirAll(path+"/functions/bash", 0o777))
-				assert.NoError(t, os.WriteFile(path+"/functions/bash/front.bash", []byte{}, 0o777))
-				assert.NoError(t, os.WriteFile(path+"/functions/bash/test.bash", []byte{}, 0o777))
-			},
 			func(e error) {
 				assert.NoError(t, e)
 				path := getConfigPath(t)
@@ -474,10 +513,19 @@ func TestRemove(t *testing.T) {
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
-			s.setup()
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			s.test(w.Remove("test"))
+			err = w.Create("test")
+			assert.NoError(t, err)
+			err = w.CreateEnv("test", "prod")
+			assert.NoError(t, err)
+			err = w.CreateEnv("test", "dev")
+			assert.NoError(t, err)
+			err = w.Create("front")
+			assert.NoError(t, err)
+			err = w.CreateEnv("front", "dev")
+			assert.NoError(t, err)
+			s.test(w.Remove(s.workspace))
 		})
 	}
 }

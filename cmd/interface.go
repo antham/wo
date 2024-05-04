@@ -4,6 +4,8 @@ import "github.com/antham/wo/workspace"
 
 type workspaceManager interface {
 	Get(string) (workspace.Workspace, error)
+	Create(string) error
+	CreateEnv(string, string) error
 	Edit(string) error
 	EditEnv(string, string) error
 	Load(string, string) error

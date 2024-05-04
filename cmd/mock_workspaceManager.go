@@ -12,6 +12,42 @@ type mockWorkspaceManager struct {
 	mock.Mock
 }
 
+// Create provides a mock function with given fields: _a0
+func (_m *mockWorkspaceManager) Create(_a0 string) error {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Create")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CreateEnv provides a mock function with given fields: _a0, _a1
+func (_m *mockWorkspaceManager) CreateEnv(_a0 string, _a1 string) error {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateEnv")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Edit provides a mock function with given fields: _a0
 func (_m *mockWorkspaceManager) Edit(_a0 string) error {
 	ret := _m.Called(_a0)
