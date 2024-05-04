@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
@@ -27,15 +28,15 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 			title := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
 				Render("Workspaces")
-			var list string
+			var list []string
 			for _, w := range workspaces {
-				list += lipgloss.NewStyle().
+				list = append(list, lipgloss.NewStyle().
 					Foreground(lipgloss.Color("#8ECDDD")).
-					Render("• " + w.Name)
+					Render(fmt.Sprintf("* %s", w.Name)))
 			}
-			fmt.Println(title)
-			fmt.Println(separator)
-			fmt.Println(list)
+			cmd.Println(title)
+			cmd.Println(separator)
+			cmd.Println(strings.Join(list, "\n"))
 			return nil
 		},
 	}
