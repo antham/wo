@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/antham/wo/cmd/internal/completion"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 	"github.com/spf13/cobra"
 )
 
@@ -31,64 +31,61 @@ func newShowCmd(workspaceManager workspaceManager) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			functionRowTableSize := []int{10, 12}
-			fs := [][]string{}
-			for _, c := range wo.Functions {
-				if c.Description == "" {
-					c.Description = "-"
-				}
-				fs = append(fs, []string{c.Function, c.Description})
-				if len(c.Function)+1 > functionRowTableSize[0] {
-					functionRowTableSize[0] = len(c.Function) + 1
-				}
-				if len(c.Description)+1 > functionRowTableSize[1] {
-					functionRowTableSize[1] = len(c.Description) + 1
-				}
-			}
-			envRowTableSize := 5
-			for _, e := range wo.Envs {
-				if len(e)+1 > envRowTableSize {
-					envRowTableSize = len(e) + 1
-				}
-			}
+			separator := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#22668D")).
+				Render("---")
 			title := lipgloss.NewStyle().
-				MarginBottom(1).
-				Bold(true).
-				Foreground(lipgloss.Color("#7071E8")).
+				Foreground(lipgloss.Color("#FFCC70")).
 				Render(fmt.Sprintf("Workspace %s", wo.Name))
-			functions := table.New().
-				Border(lipgloss.NormalBorder()).
-				BorderRow(true).
-				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
-				Headers("Functions", "Description").
-				StyleFunc(func(row, col int) lipgloss.Style {
-					var style lipgloss.Style
-					switch {
-					case row == 0:
-						style = style.Bold(true).Foreground(lipgloss.Color("#C683D7"))
-					}
-					style = style.Copy().Width(functionRowTableSize[col])
-					return style
-				}).
-				Rows(fs...)
-			envs := table.New().
-				Border(lipgloss.NormalBorder()).
-				BorderRow(true).
-				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
-				Headers("Envs").
-				StyleFunc(func(row, col int) lipgloss.Style {
-					var style lipgloss.Style
-					switch {
-					case row == 0:
-						style = style.Bold(true).Foreground(lipgloss.Color("#C683D7"))
-					}
-					style = style.Copy().Width(functionRowTableSize[col])
-					return style
-				}).
-				Rows([][]string{wo.Envs}...)
+			functionTitle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFCC70")).
+				Height(2).
+				Render("Functions")
+			var functions []string
+			for _, f := range wo.Functions {
+				functions = append(
+					functions,
+					fmt.Sprintf(
+						"%s %s %s",
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#8ECDDD")).
+							Render("•"),
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#FFFADD")).
+							Render(f.Function),
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#8ECDDD")).
+							Render(fmt.Sprintf(": %s", f.Description)),
+					),
+				)
+			}
+			if len(wo.Functions) == 0 {
+				functions = append(functions, lipgloss.NewStyle().
+					Foreground(lipgloss.Color("#8ECDDD")).
+					Render("No functions defined"))
+			}
+			envTitle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFCC70")).
+				Height(2).
+				Render("Envs")
+			var envs []string
+			for _, e := range wo.Envs {
+				envs = append(envs, lipgloss.NewStyle().
+					Foreground(lipgloss.Color("#8ECDDD")).
+					Render(fmt.Sprintf("• %s", e)))
+			}
+			if len(wo.Envs) == 0 {
+				envs = append(envs, lipgloss.NewStyle().
+					Foreground(lipgloss.Color("#8ECDDD")).
+					Render("No envs defined"))
+			}
 			fmt.Println(title)
-			fmt.Println(functions)
-			fmt.Println(envs)
+			fmt.Println(separator)
+			fmt.Println(functionTitle)
+			fmt.Println(strings.Join(functions, "\n"))
+			fmt.Println(separator)
+			fmt.Println(envTitle)
+			fmt.Println(strings.Join(envs, "\n"))
 			return nil
 		},
 	}

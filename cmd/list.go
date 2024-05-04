@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 	"github.com/spf13/cobra"
 )
 
@@ -18,30 +18,24 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			wss := [][]string{}
-			workspaceRowTableSize := 11
-			for _, w := range workspaces {
-				if len(w.Name)+1 > workspaceRowTableSize {
-					workspaceRowTableSize = len(w.Name) + 1
-				}
-				wss = append(wss, []string{w.Name})
+			if len(workspaces) == 0 {
+				return errors.New("no workspaces defined")
 			}
-			ws := table.New().
-				Border(lipgloss.NormalBorder()).
-				BorderRow(true).
-				BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#C683D7"))).
-				Headers("Workspaces").
-				StyleFunc(func(row, col int) lipgloss.Style {
-					var style lipgloss.Style
-					switch {
-					case row == 0:
-						style = style.Bold(true).Foreground(lipgloss.Color("#C683D7"))
-					}
-					style = style.Copy().Width(workspaceRowTableSize)
-					return style
-				}).
-				Rows(wss...)
-			fmt.Println(ws)
+			separator := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#22668D")).
+				Render("---")
+			title := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFCC70")).
+				Render("Workspaces")
+			var list string
+			for _, w := range workspaces {
+				list += lipgloss.NewStyle().
+					Foreground(lipgloss.Color("#8ECDDD")).
+					Render("• " + w.Name)
+			}
+			fmt.Println(title)
+			fmt.Println(separator)
+			fmt.Println(list)
 			return nil
 		},
 	}
