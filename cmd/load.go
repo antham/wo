@@ -9,10 +9,10 @@ var env string
 
 func newLoadCmd(workspaceManager workspaceManager) *cobra.Command {
 	loadCmd := &cobra.Command{
-		Use:     "load workspace",
+		Use:     "load workspace [environment]",
 		Aliases: []string{"l"},
 		Short:   "Load a workspace",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.RangeArgs(1, 2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			c := completion.New(workspaceManager)
 			switch len(args) {
@@ -26,9 +26,14 @@ func newLoadCmd(workspaceManager workspaceManager) *cobra.Command {
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return workspaceManager.Load(args[0], env)
+			switch len(args) {
+			case 1:
+				return workspaceManager.Load(args[0], "")
+			case 2:
+				return workspaceManager.Load(args[0], args[1])
+			}
+			return nil
 		},
 	}
-	loadCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")
 	return loadCmd
 }
