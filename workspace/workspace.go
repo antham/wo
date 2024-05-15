@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/antham/wo/shell"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -154,7 +155,11 @@ func (s WorkspaceManager) Create(name string) error {
 	if err != nil {
 		return err
 	}
-	return s.createFile(s.resolveEnvFile(name, s.resolveEnv("")))
+	err = s.createFile(s.resolveEnvFile(name, s.resolveEnv("")))
+	if err != nil {
+		return err
+	}
+	return s.createFile(s.resolveConfigFile(name))
 }
 
 func (s WorkspaceManager) CreateEnv(name string, env string) error {
@@ -203,6 +208,12 @@ func (s WorkspaceManager) Remove(name string) error {
 		return err
 	}
 	return errors.Join(os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
+}
+
+func (s WorkspaceManager) SetConfig(name string, key string, value string) error {
+	v := s.getViper(name)
+	v.Set(key, value)
+	return v.WriteConfig()
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
@@ -275,6 +286,10 @@ func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
 	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvDir(name), s.resolveEnv(env), s.getExtension())
 }
 
+func (s WorkspaceManager) resolveConfigFile(name string) string {
+	return fmt.Sprintf("%s/%s.toml", s.getConfigDir(), name)
+}
+
 func (s WorkspaceManager) getExtension() string {
 	for _, shell := range []string{fish, bash, zsh, sh} {
 		if strings.Contains(s.shellBin, shell) {
@@ -285,7 +300,12 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.configDir, 0o777), os.MkdirAll(s.getFunctionDir(), 0o777), os.MkdirAll(s.getEnvDir(), 0o777))
+	return errors.Join(
+		os.MkdirAll(s.configDir, 0o777),
+		os.MkdirAll(s.getFunctionDir(), 0o777),
+		os.MkdirAll(s.getEnvDir(), 0o777),
+		os.MkdirAll(s.getConfigDir(), 0o777),
+	)
 }
 
 func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
@@ -300,8 +320,20 @@ func (s WorkspaceManager) getEnvDir() string {
 	return fmt.Sprintf("%s/envs", s.configDir)
 }
 
+func (s WorkspaceManager) getConfigDir() string {
+	return fmt.Sprintf("%s/configs", s.configDir)
+}
+
 func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
 	return fmt.Sprintf("%s/%s", s.getEnvDir(), name)
+}
+
+func (s WorkspaceManager) getViper(name string) *viper.Viper {
+	v := viper.New()
+	v.AddConfigPath(fmt.Sprintf("%s/", s.getConfigDir()))
+	v.SetConfigName(name)
+	v.SetConfigType("toml")
+	return v
 }
 
 func (s WorkspaceManager) createEnvVariableStatement(name string, value string) string {

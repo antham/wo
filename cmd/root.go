@@ -20,6 +20,9 @@ func newRootCmd() *cobra.Command {
 		log.Fatal(err)
 	}
 
+	configCmd := newConfigCmd()
+	configCmd.AddCommand(newSetCmd(w))
+
 	rootCmd.AddCommand(newCreateCmd(w))
 	rootCmd.AddCommand(newEditCmd(w))
 	rootCmd.AddCommand(newListCmd(w))
@@ -27,6 +30,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newRemoveCmd(w))
 	rootCmd.AddCommand(newRunCmd(w))
 	rootCmd.AddCommand(newShowCmd(w))
+	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(newVersionCmd())
 	return rootCmd
 }

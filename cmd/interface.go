@@ -12,4 +12,5 @@ type workspaceManager interface {
 	List() ([]workspace.Workspace, error)
 	RunFunction(string, string, []string) error
 	Remove(string) error
+	SetConfig(string, string, string) error
 }
