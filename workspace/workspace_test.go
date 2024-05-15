@@ -298,7 +298,7 @@ func TestEdit(t *testing.T) {
 			assert.NoError(t, err)
 			s.setup(t, w)
 			args := []string{}
-			w.execCommand = func(a ...string) error {
+			w.execCommand = func(p string, a ...string) error {
 				args = a
 				return nil
 			}
@@ -341,7 +341,7 @@ func TestEditEnv(t *testing.T) {
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
 			args := []string{}
-			w.execCommand = func(a ...string) error {
+			w.execCommand = func(p string, a ...string) error {
 				args = a
 				return nil
 			}
@@ -403,7 +403,7 @@ func TestLoad(t *testing.T) {
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
 			args := []string{}
-			w.execCommand = func(a ...string) error {
+			w.execCommand = func(p string, a ...string) error {
 				args = a
 				return nil
 			}
@@ -470,7 +470,7 @@ func TestRunFunction(t *testing.T) {
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
 			args := []string{}
-			w.execCommand = func(a ...string) error {
+			w.execCommand = func(p string, a ...string) error {
 				args = a
 				return nil
 			}

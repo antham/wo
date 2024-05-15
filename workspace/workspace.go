@@ -46,7 +46,7 @@ type WorkspaceManager struct {
 	shellBin    string
 	shell       string
 	configDir   string
-	execCommand func(...string) error
+	execCommand func(string, ...string) error
 }
 
 func NewWorkspaceManager(options ...func(*WorkspaceManager)) (WorkspaceManager, error) {
@@ -195,11 +195,27 @@ func (s WorkspaceManager) EditEnv(name string, env string) error {
 }
 
 func (s WorkspaceManager) Load(name string, env string) error {
-	return s.execCommand(s.appendLoadStatement(name, env, []string{})...)
+	p, err := s.GetConfig(name, "path")
+	if err != nil {
+		return err
+	}
+	path := ""
+	if p != nil {
+		path = p.(string)
+	}
+	return s.execCommand(path, s.appendLoadStatement(name, env, []string{})...)
 }
 
 func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs []string) error {
-	return s.execCommand(s.appendLoadStatement(name, env, functionAndArgs)...)
+	p, err := s.GetConfig(name, "path")
+	if err != nil {
+		return err
+	}
+	path := ""
+	if p != nil {
+		path = p.(string)
+	}
+	return s.execCommand(path, s.appendLoadStatement(name, env, functionAndArgs)...)
 }
 
 func (s WorkspaceManager) Remove(name string) error {
@@ -214,6 +230,15 @@ func (s WorkspaceManager) SetConfig(name string, key string, value string) error
 	v := s.getViper(name)
 	v.Set(key, value)
 	return v.WriteConfig()
+}
+
+func (s WorkspaceManager) GetConfig(name string, key string) (any, error) {
+	v := s.getViper(name)
+	err := v.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
+	return v.Get(key), nil
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
@@ -245,7 +270,7 @@ func (s WorkspaceManager) appendLoadStatement(name string, env string, functionA
 }
 
 func (s WorkspaceManager) editFile(filepath string) error {
-	return s.execCommand("-c", fmt.Sprintf("%s %s", s.editor, filepath))
+	return s.execCommand("", "-c", fmt.Sprintf("%s %s", s.editor, filepath))
 }
 
 func (s WorkspaceManager) createFile(filepath string) error {
@@ -346,12 +371,13 @@ func (s WorkspaceManager) createEnvVariableStatement(name string, value string) 
 	return ""
 }
 
-func execCommand(shellBin string) func(args ...string) error {
-	return func(args ...string) error {
+func execCommand(shellBin string) func(path string, args ...string) error {
+	return func(path string, args ...string) error {
 		command := exec.Command(shellBin, args...)
 		command.Stdout = os.Stdout
 		command.Stdin = os.Stdin
 		command.Stderr = os.Stderr
+		command.Dir = path
 		return command.Run()
 	}
 }
