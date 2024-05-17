@@ -557,7 +557,7 @@ func TestSetConfig(t *testing.T) {
 			},
 		},
 		{
-			"Set a value in a existing workspace",
+			"Set a value in an unexisting workspace",
 			"whatever",
 			"path",
 			"/home/user/project",
