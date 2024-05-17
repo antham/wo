@@ -241,6 +241,21 @@ func (s WorkspaceManager) GetConfig(name string, key string) (any, error) {
 	return v.Get(key), nil
 }
 
+func (s WorkspaceManager) Cd(name string) error {
+	p, err := s.GetConfig(name, "path")
+	if err != nil {
+		return err
+	}
+	stmts := []string{}
+	switch s.shell {
+	case bash, sh, zsh:
+		// TODO
+	case fish:
+		stmts = append(stmts, "-C", "true")
+	}
+	return s.execCommand(p.(string), stmts...)
+}
+
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
 	data := []string{}
 	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
