@@ -15,7 +15,6 @@ func newRootCmd() *cobra.Command {
 		Use:   "wo",
 		Short: "Manage workspace in shell",
 	}
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	w, err := newWorkspaceManager()
 	if err != nil {
 		log.Fatal(err)
