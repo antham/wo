@@ -12,6 +12,7 @@ func newCreateCmd(workspaceManager workspaceManager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "create workspace [environment]",
 		Short: "Create a workspace",
+		Args:  cobra.RangeArgs(1, 2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			c := completion.New(workspaceManager)
 			switch len(args) {
