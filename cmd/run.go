@@ -19,7 +19,7 @@ func newRunCmd(workspaceManager workspaceManager, completionManager completionMa
 			if exitError, ok := err.(*exec.ExitError); ok {
 				os.Exit(exitError.ExitCode())
 			}
-			return nil
+			return err
 		},
 	}
 	runCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")

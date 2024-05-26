@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"testing"
 
@@ -25,6 +26,18 @@ func TestNewRunCmd(t *testing.T) {
 			},
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
+			},
+		},
+		{
+			"Running a function with an error",
+			func(t *testing.T) (workspaceManager, []string) {
+				w := newMockWorkspaceManager(t)
+				args := []string{"api", "start"}
+				w.Mock.On("RunFunction", args[0], "", []string{args[1]}).Return(errors.New("an error occurred"))
+				return w, args
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
 			},
 		},
 	}
