@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +22,7 @@ func newLoadCmd(workspaceManager workspaceManager, completionManager completionM
 			case 2:
 				return workspaceManager.Load(args[0], args[1])
 			}
-			return nil
+			return errors.New("too much arguments provided")
 		},
 	}
 	return loadCmd

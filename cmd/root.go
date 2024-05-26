@@ -45,7 +45,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newCreateCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, envCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
-	rootCmd.AddCommand(newLoadCmd(w, wksCompMgr))
+	rootCmd.AddCommand(newLoadCmd(w, envCompMgr))
 	rootCmd.AddCommand(newRemoveCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newRunCmd(w, funcCompMgr))
 	rootCmd.AddCommand(newShowCmd(w, wksCompMgr))

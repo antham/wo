@@ -52,6 +52,17 @@ func TestNewLoadCmd(t *testing.T) {
 				assert.NoError(t, err)
 			},
 		},
+		{
+			"Returns an error if too much arguments are provided",
+			func(t *testing.T) (workspaceManager, []string) {
+				w := newMockWorkspaceManager(t)
+				args := []string{"api", "prod", "whatever"}
+				return w, args
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
