@@ -13,7 +13,7 @@ import (
 func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "wo",
-		Short: "Manage workspace in shell",
+		Short: "Manage workspaces in shell",
 	}
 	w, err := newWorkspaceManager()
 	if err != nil {
