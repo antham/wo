@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/antham/wo/cmd/internal/completion"
 	"github.com/antham/wo/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,18 +21,36 @@ func newRootCmd() *cobra.Command {
 		log.Fatal(err)
 	}
 
-	configCmd := newConfigCmd()
-	configCmd.AddCommand(newSetCmd(w))
+	wksCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.FindWorkspaces,
+		},
+	)
+	funcCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.FindWorkspaces,
+			completion.FindFunctions,
+		},
+	)
+	envCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.FindWorkspaces,
+			completion.FindEnvs,
+		},
+	)
 
-	rootCmd.AddCommand(newCreateCmd(w))
-	rootCmd.AddCommand(newEditCmd(w))
+	configCmd := newConfigCmd()
+	configCmd.AddCommand(newSetCmd(w, wksCompMgr))
+
+	rootCmd.AddCommand(newCreateCmd(w, wksCompMgr))
+	rootCmd.AddCommand(newEditCmd(w, envCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
-	rootCmd.AddCommand(newLoadCmd(w))
-	rootCmd.AddCommand(newRemoveCmd(w))
-	rootCmd.AddCommand(newRunCmd(w))
-	rootCmd.AddCommand(newShowCmd(w))
+	rootCmd.AddCommand(newLoadCmd(w, wksCompMgr))
+	rootCmd.AddCommand(newRemoveCmd(w, wksCompMgr))
+	rootCmd.AddCommand(newRunCmd(w, funcCompMgr))
+	rootCmd.AddCommand(newShowCmd(w, wksCompMgr))
 	rootCmd.AddCommand(configCmd)
-	rootCmd.AddCommand(newCdCmd(w))
+	rootCmd.AddCommand(newCdCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newVersionCmd())
 	return rootCmd
 }

@@ -106,7 +106,7 @@ Envs
 			errBuf := &bytes.Buffer{}
 			outBuf := &bytes.Buffer{}
 			w, args := s.setup(t)
-			cmd := newShowCmd(w)
+			cmd := newShowCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)
 			cmd.SetErr(errBuf)
 			cmd.SetOut(outBuf)

@@ -1,6 +1,9 @@
 package cmd
 
-import "github.com/antham/wo/workspace"
+import (
+	"github.com/antham/wo/workspace"
+	"github.com/spf13/cobra"
+)
 
 type workspaceManager interface {
 	Get(string) (workspace.Workspace, error)
@@ -14,4 +17,8 @@ type workspaceManager interface {
 	Remove(string) error
 	SetConfig(string, string, string) error
 	Cd(string) error
+}
+
+type completionManager interface {
+	Process(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective)
 }

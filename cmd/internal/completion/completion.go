@@ -3,18 +3,40 @@ package completion
 import (
 	"fmt"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
+
+type Decorator func(workspaceManager, string, ...string) ([]string, error)
 
 type Completion struct {
 	workspaceManager workspaceManager
+	decorators       []Decorator
 }
 
-func New(workspaceManager workspaceManager) Completion {
-	return Completion{workspaceManager: workspaceManager}
+func New(workspaceManager workspaceManager, decorators []Decorator) Completion {
+	return Completion{workspaceManager: workspaceManager, decorators: decorators}
 }
 
-func (c Completion) FindWorkspaces(toComplete string) ([]string, error) {
-	workspaces, err := c.workspaceManager.List()
+func (c Completion) Process(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) > len(c.decorators) {
+		return []string{}, cobra.ShellCompDirectiveNoFileComp
+	}
+	var matches []string
+	var err error
+	if len(args) == 0 {
+		matches, err = c.decorators[0](c.workspaceManager, toComplete)
+	} else {
+		matches, err = c.decorators[len(args)](c.workspaceManager, toComplete, args[len(args)-1])
+	}
+	if err != nil {
+		return []string{}, cobra.ShellCompDirectiveNoFileComp
+	}
+	return matches, cobra.ShellCompDirectiveNoFileComp
+}
+
+func FindWorkspaces(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+	workspaces, err := workspaceManager.List()
 	if err != nil {
 		return []string{}, err
 	}
@@ -27,8 +49,8 @@ func (c Completion) FindWorkspaces(toComplete string) ([]string, error) {
 	return ws, nil
 }
 
-func (c Completion) FindFunctions(workspace string, toComplete string) ([]string, error) {
-	w, err := c.workspaceManager.Get(workspace)
+func FindFunctions(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+	w, err := workspaceManager.Get(args[0])
 	if err != nil {
 		return []string{}, err
 	}
@@ -45,8 +67,8 @@ func (c Completion) FindFunctions(workspace string, toComplete string) ([]string
 	return fs, nil
 }
 
-func (c Completion) FindEnvs(workspace string, toComplete string) ([]string, error) {
-	w, err := c.workspaceManager.Get(workspace)
+func FindEnvs(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+	w, err := workspaceManager.Get(args[0])
 	if err != nil {
 		return []string{}, err
 	}

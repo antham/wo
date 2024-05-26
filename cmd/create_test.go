@@ -70,7 +70,7 @@ func TestNewCreateCmd(t *testing.T) {
 			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "/bin/sh")
 			w, args := s.setup(t)
-			cmd := newCreateCmd(w)
+			cmd := newCreateCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)
 			cmd.SetErr(&bytes.Buffer{})
 			cmd.SetOut(&bytes.Buffer{})
