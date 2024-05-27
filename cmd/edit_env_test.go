@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewCreateCmd(t *testing.T) {
+func TestNewEditEnvCmd(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, []string)
@@ -17,11 +17,11 @@ func TestNewCreateCmd(t *testing.T) {
 	}
 	scenarios := []scenario{
 		{
-			"An error occurred when creating a workspace",
+			"An error occurred when editing a workspace env",
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
-				args := []string{"api", "/tmp/project"}
-				w.Mock.On("Create", args[0], args[1]).Return(errors.New("an error occurred"))
+				args := []string{"api", "prod"}
+				w.Mock.On("EditEnv", args[0], args[1]).Return(errors.New("an error occurred"))
 				return w, args
 			},
 			func(t *testing.T, err error) {
@@ -29,11 +29,11 @@ func TestNewCreateCmd(t *testing.T) {
 			},
 		},
 		{
-			"Creating a workspace successfully",
+			"Editing a workspace env successfully",
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
-				args := []string{"api", "/tmp/project"}
-				w.Mock.On("Create", args[0], args[1]).Return(nil)
+				args := []string{"api", "prod"}
+				w.Mock.On("EditEnv", args[0], args[1]).Return(nil)
 				return w, args
 			},
 			func(t *testing.T, err error) {
@@ -46,7 +46,7 @@ func TestNewCreateCmd(t *testing.T) {
 			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "/bin/sh")
 			w, args := s.setup(t)
-			cmd := newCreateCmd(w, newMockCompletionManager(t))
+			cmd := newEditEnvCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)
 			cmd.SetErr(&bytes.Buffer{})
 			cmd.SetOut(&bytes.Buffer{})

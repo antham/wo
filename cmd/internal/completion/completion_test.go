@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/antham/wo/workspace"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -86,7 +87,7 @@ func TestFindWorkspaces(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, string, []string)
-		test  func(*testing.T, []string, error)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
 	}
 	scenarios := []scenario{
 		{
@@ -96,8 +97,9 @@ func TestFindWorkspaces(t *testing.T) {
 				w.Mock.On("List").Return([]workspace.Workspace{}, errors.New("an error occurred"))
 				return w, "", []string{}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.Error(t, err)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 		{
@@ -120,17 +122,18 @@ func TestFindWorkspaces(t *testing.T) {
 					}, nil)
 				return w, "da", []string{}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, []string{"da", "daa", "dab", "dac"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			workspaceManager, toComplete, args := s.setup(t)
-			completion, err := FindWorkspaces(workspaceManager, toComplete, args...)
-			s.test(t, completion, err)
+			completion, compMode, err := FindWorkspaces(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
 		})
 	}
 }
@@ -139,7 +142,7 @@ func TestFindEnvs(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, string, []string)
-		test  func(*testing.T, []string, error)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
 	}
 	scenarios := []scenario{
 		{
@@ -149,8 +152,9 @@ func TestFindEnvs(t *testing.T) {
 				w.Mock.On("Get", "test").Return(workspace.Workspace{}, errors.New("an error occurred"))
 				return w, "", []string{"test"}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.Error(t, err)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 		{
@@ -175,17 +179,18 @@ func TestFindEnvs(t *testing.T) {
 					}, nil)
 				return w, "da", []string{"test"}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, []string{"da", "daa", "dab", "dac"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			workspaceManager, toComplete, args := s.setup(t)
-			completion, err := FindEnvs(workspaceManager, toComplete, args...)
-			s.test(t, completion, err)
+			completion, compMode, err := FindEnvs(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
 		})
 	}
 }
@@ -194,7 +199,7 @@ func TestFindFunctions(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, string, []string)
-		test  func(*testing.T, []string, error)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
 	}
 	scenarios := []scenario{
 		{
@@ -204,8 +209,9 @@ func TestFindFunctions(t *testing.T) {
 				w.Mock.On("Get", "test").Return(workspace.Workspace{}, errors.New("an error occurred"))
 				return w, "", []string{"test"}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.Error(t, err)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 		{
@@ -230,17 +236,74 @@ func TestFindFunctions(t *testing.T) {
 					}, nil)
 				return w, "da", []string{"test"}
 			},
-			func(t *testing.T, completion []string, err error) {
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, []string{"da", "daa\tfunction daa", "dab", "dac\tfunction dac"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			workspaceManager, toComplete, args := s.setup(t)
-			completion, err := FindFunctions(workspaceManager, toComplete, args...)
-			s.test(t, completion, err)
+			completion, compMode, err := FindFunctions(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
+		})
+	}
+}
+
+func TestFindDir(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T) (workspaceManager, string, []string)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
+	}
+	scenarios := []scenario{
+		{
+			"Get completion dirs directive",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return newMockWorkspaceManager(t), "", []string{"test"}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Empty(t, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveFilterDirs, compMode)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			workspaceManager, toComplete, args := s.setup(t)
+			completion, compMode, err := FindDirs(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
+		})
+	}
+}
+
+func TestNoOp(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T) (workspaceManager, string, []string)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
+	}
+	scenarios := []scenario{
+		{
+			"Get no file directive",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return newMockWorkspaceManager(t), "", []string{"test"}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Empty(t, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			workspaceManager, toComplete, args := s.setup(t)
+			completion, compMode, err := NoOp(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
 		})
 	}
 }

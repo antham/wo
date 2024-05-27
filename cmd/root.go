@@ -20,6 +20,12 @@ func newRootCmd() *cobra.Command {
 		log.Fatal(err)
 	}
 
+	dirCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.NoOp,
+			completion.FindDirs,
+		},
+	)
 	wksCompMgr := completion.New(
 		w, []completion.Decorator{
 			completion.FindWorkspaces,
@@ -41,14 +47,19 @@ func newRootCmd() *cobra.Command {
 	configCmd := newConfigCmd()
 	configCmd.AddCommand(newSetCmd(w, wksCompMgr))
 
-	rootCmd.AddCommand(newCreateCmd(w, wksCompMgr))
-	rootCmd.AddCommand(newEditCmd(w, envCompMgr))
+	envCmd := newEnvCmd()
+	envCmd.AddCommand(newCreateEnvCmd(w, wksCompMgr))
+	envCmd.AddCommand(newEditEnvCmd(w, envCompMgr))
+
+	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(envCmd)
+	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
+	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
 	rootCmd.AddCommand(newLoadCmd(w, envCompMgr))
 	rootCmd.AddCommand(newRemoveCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newRunCmd(w, funcCompMgr))
 	rootCmd.AddCommand(newShowCmd(w, wksCompMgr))
-	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(newCdCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newVersionCmd())
 	return rootCmd

@@ -29,35 +29,11 @@ func TestNewEditCmd(t *testing.T) {
 			},
 		},
 		{
-			"An error occurred when editing a workspace env",
-			func(t *testing.T) (workspaceManager, []string) {
-				w := newMockWorkspaceManager(t)
-				args := []string{"api", "prod"}
-				w.Mock.On("EditEnv", args[0], args[1]).Return(errors.New("an error occurred"))
-				return w, args
-			},
-			func(t *testing.T, err error) {
-				assert.Error(t, err)
-			},
-		},
-		{
 			"Editing a workspace successfully",
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api"}
 				w.Mock.On("Edit", args[0]).Return(nil)
-				return w, args
-			},
-			func(t *testing.T, err error) {
-				assert.NoError(t, err)
-			},
-		},
-		{
-			"Editing a workspace env successfully",
-			func(t *testing.T) (workspaceManager, []string) {
-				w := newMockWorkspaceManager(t)
-				args := []string{"api", "prod"}
-				w.Mock.On("EditEnv", args[0], args[1]).Return(nil)
 				return w, args
 			},
 			func(t *testing.T, err error) {

@@ -147,7 +147,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 	}, nil
 }
 
-func (s WorkspaceManager) Create(name string) error {
+func (s WorkspaceManager) Create(name string, path string) error {
 	err := s.createWorkspaceEnvFolder(name)
 	if err != nil {
 		return err
@@ -160,7 +160,11 @@ func (s WorkspaceManager) Create(name string) error {
 	if err != nil {
 		return err
 	}
-	return s.createFile(s.resolveConfigFile(name))
+	err = s.createFile(s.resolveConfigFile(name))
+	if err != nil {
+		return err
+	}
+	return s.SetConfig(name, "path", path)
 }
 
 func (s WorkspaceManager) CreateEnv(name string, env string) error {

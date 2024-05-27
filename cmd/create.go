@@ -6,18 +6,12 @@ import (
 
 func newCreateCmd(workspaceManager workspaceManager, completionManager completionManager) *cobra.Command {
 	return &cobra.Command{
-		Use:               "create workspace [environment]",
+		Use:               "create workspace project-path",
 		Short:             "Create a workspace",
-		Args:              cobra.RangeArgs(1, 2),
+		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: completionManager.Process,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			switch len(args) {
-			case 1:
-				err = workspaceManager.Create(args[0])
-			case 2:
-				err = workspaceManager.CreateEnv(args[0], args[1])
-			}
-			return err
+			return workspaceManager.Create(args[0], args[1])
 		},
 	}
 }

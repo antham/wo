@@ -7,7 +7,7 @@ import (
 
 type workspaceManager interface {
 	Get(string) (workspace.Workspace, error)
-	Create(string) error
+	Create(string, string) error
 	CreateEnv(string, string) error
 	Edit(string) error
 	EditEnv(string, string) error

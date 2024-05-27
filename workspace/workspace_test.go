@@ -8,7 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var configPath string
+var (
+	configPath  string
+	projectPath string
+)
 
 func getConfigPath(t *testing.T) string {
 	if configPath == "" {
@@ -17,6 +20,15 @@ func getConfigPath(t *testing.T) string {
 		configPath = path
 	}
 	return configPath
+}
+
+func getProjectPath(t *testing.T) string {
+	if projectPath == "" {
+		path, err := os.MkdirTemp("/tmp", "project")
+		assert.NoError(t, err)
+		projectPath = path
+	}
+	return projectPath
 }
 
 func TestNewWorkspaceManager(t *testing.T) {
@@ -95,11 +107,11 @@ func TestList(t *testing.T) {
 		{
 			"Get all workspaces ordered alphabetically",
 			func(t *testing.T, w WorkspaceManager) {
-				assert.NoError(t, w.Create("api"))
+				assert.NoError(t, w.Create("api", getProjectPath(t)))
 				assert.NoError(t, w.CreateEnv("api", "dev"))
-				assert.NoError(t, w.Create("db"))
+				assert.NoError(t, w.Create("db", getProjectPath(t)))
 				assert.NoError(t, w.CreateEnv("db", "staging"))
-				assert.NoError(t, w.Create("front"))
+				assert.NoError(t, w.Create("front", getProjectPath(t)))
 				assert.NoError(t, w.CreateEnv("front", "prod"))
 			},
 			func(t *testing.T, ws []Workspace, err error) {
@@ -143,7 +155,7 @@ func TestGet(t *testing.T) {
 		{
 			"Get all workspace",
 			func(t *testing.T, w WorkspaceManager) {
-				err := w.Create("front")
+				err := w.Create("front", getProjectPath(t))
 				assert.NoError(t, err)
 				err = w.CreateEnv("front", "prod")
 				assert.NoError(t, err)
@@ -216,6 +228,9 @@ func TestCreate(t *testing.T) {
 				configFile, err := os.Stat(path + "/configs/test.toml")
 				assert.NoError(t, err)
 				assert.Equal(t, "test.toml", configFile.Name())
+				b, err := os.ReadFile(path + "/configs/test.toml")
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("path = '%s'\n", getProjectPath(t)), string(b))
 			},
 		},
 	}
@@ -226,7 +241,7 @@ func TestCreate(t *testing.T) {
 			assert.NoError(t, err)
 			s.setup(t, w)
 			assert.NoError(t, err)
-			s.test(t, w.Create("test"))
+			s.test(t, w.Create("test", getProjectPath(t)))
 		})
 	}
 }
@@ -264,7 +279,7 @@ func TestCreateEnv(t *testing.T) {
 			assert.NoError(t, err)
 			s.setup(t, w)
 			assert.NoError(t, err)
-			assert.NoError(t, w.Create("test"))
+			assert.NoError(t, w.Create("test", getProjectPath(t)))
 			s.test(t, w.CreateEnv("test", "prod"))
 		})
 	}
@@ -280,7 +295,7 @@ func TestEdit(t *testing.T) {
 		{
 			"Edit workspace",
 			func(t *testing.T, w WorkspaceManager) {
-				err := w.Create("test")
+				err := w.Create("test", getProjectPath(t))
 				assert.NoError(t, err)
 			},
 			func(t *testing.T, args []string) {
@@ -336,7 +351,7 @@ func TestEditEnv(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test")
+			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
@@ -398,7 +413,7 @@ func TestLoad(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test")
+			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
@@ -465,7 +480,7 @@ func TestRunFunction(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test")
+			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
@@ -520,13 +535,13 @@ func TestRemove(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test")
+			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "dev")
 			assert.NoError(t, err)
-			err = w.Create("front")
+			err = w.Create("front", getProjectPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("front", "dev")
 			assert.NoError(t, err)
@@ -571,7 +586,7 @@ func TestSetConfig(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test")
+			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
 			s.test(t, w.SetConfig(s.workspace, s.key, s.value))
 		})

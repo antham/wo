@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Decorator func(workspaceManager, string, ...string) ([]string, error)
+type Decorator func(workspaceManager, string, ...string) ([]string, cobra.ShellCompDirective, error)
 
 type Completion struct {
 	workspaceManager workspaceManager
@@ -24,21 +24,22 @@ func (c Completion) Process(cmd *cobra.Command, args []string, toComplete string
 	}
 	var matches []string
 	var err error
+	var shellDirective cobra.ShellCompDirective
 	if len(args) == 0 {
-		matches, err = c.decorators[0](c.workspaceManager, toComplete)
+		matches, shellDirective, err = c.decorators[0](c.workspaceManager, toComplete)
 	} else {
-		matches, err = c.decorators[len(args)](c.workspaceManager, toComplete, args[len(args)-1])
+		matches, shellDirective, err = c.decorators[len(args)](c.workspaceManager, toComplete, args[len(args)-1])
 	}
 	if err != nil {
 		return []string{}, cobra.ShellCompDirectiveNoFileComp
 	}
-	return matches, cobra.ShellCompDirectiveNoFileComp
+	return matches, shellDirective
 }
 
-func FindWorkspaces(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+func FindWorkspaces(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
 	workspaces, err := workspaceManager.List()
 	if err != nil {
-		return []string{}, err
+		return []string{}, cobra.ShellCompDirectiveNoFileComp, err
 	}
 	ws := []string{}
 	for _, w := range workspaces {
@@ -46,13 +47,13 @@ func FindWorkspaces(workspaceManager workspaceManager, toComplete string, args .
 			ws = append(ws, w.Name)
 		}
 	}
-	return ws, nil
+	return ws, cobra.ShellCompDirectiveNoFileComp, nil
 }
 
-func FindFunctions(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+func FindFunctions(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
 	w, err := workspaceManager.Get(args[0])
 	if err != nil {
-		return []string{}, err
+		return []string{}, cobra.ShellCompDirectiveNoFileComp, err
 	}
 	fs := []string{}
 	for _, f := range w.Functions {
@@ -64,13 +65,13 @@ func FindFunctions(workspaceManager workspaceManager, toComplete string, args ..
 			fs = append(fs, s)
 		}
 	}
-	return fs, nil
+	return fs, cobra.ShellCompDirectiveNoFileComp, nil
 }
 
-func FindEnvs(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, error) {
+func FindEnvs(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
 	w, err := workspaceManager.Get(args[0])
 	if err != nil {
-		return []string{}, err
+		return []string{}, cobra.ShellCompDirectiveNoFileComp, err
 	}
 	envs := []string{}
 	for _, env := range w.Envs {
@@ -78,5 +79,13 @@ func FindEnvs(workspaceManager workspaceManager, toComplete string, args ...stri
 			envs = append(envs, env)
 		}
 	}
-	return envs, nil
+	return envs, cobra.ShellCompDirectiveNoFileComp, nil
+}
+
+func FindDirs(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
+	return []string{}, cobra.ShellCompDirectiveFilterDirs, nil
+}
+
+func NoOp(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
+	return []string{}, cobra.ShellCompDirectiveNoFileComp, nil
 }
