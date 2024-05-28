@@ -405,5 +405,6 @@ func (c *command) command(path string, args ...string) error {
 	command.Stdin = os.Stdin
 	command.Stderr = os.Stderr
 	command.Dir = path
+	slog.With(slog.String("command", command.String())).With(slog.String("path", command.Dir)).Debug("command to run")
 	return command.Run()
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/antham/wo/cmd/internal/completion"
@@ -15,6 +16,15 @@ func newRootCmd() *cobra.Command {
 		Use:   "wo",
 		Short: "Manage workspaces in shell",
 	}
+
+	err := viper.BindEnv("WO_DEBUG")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if viper.GetBool("WO_DEBUG") {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
+
 	w, err := newWorkspaceManager()
 	if err != nil {
 		log.Fatal(err)
