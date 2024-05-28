@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/user"
@@ -43,11 +44,11 @@ type Function struct {
 }
 
 type WorkspaceManager struct {
-	editor      string
-	shellBin    string
-	shell       string
-	configDir   string
-	execCommand func(string, ...string) error
+	editor    string
+	shellBin  string
+	shell     string
+	configDir string
+	exec      Commander
 }
 
 func NewWorkspaceManager(options ...func(*WorkspaceManager)) (WorkspaceManager, error) {
@@ -63,7 +64,7 @@ func NewWorkspaceManager(options ...func(*WorkspaceManager)) (WorkspaceManager, 
 	if w.editor == "" {
 		return WorkspaceManager{}, errors.New("no editor defined")
 	}
-	w.execCommand = execCommand(w.shellBin)
+	w.exec = newCommand(w.shellBin)
 	return w, w.createConfigFolder()
 }
 
@@ -208,7 +209,7 @@ func (s WorkspaceManager) Load(name string, env string) error {
 	if p != nil {
 		path = p.(string)
 	}
-	return s.execCommand(path, s.appendLoadStatement(name, env, []string{})...)
+	return s.exec.command(path, s.appendLoadStatement(name, env, []string{})...)
 }
 
 func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs []string) error {
@@ -220,7 +221,7 @@ func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs [
 	if p != nil {
 		path = p.(string)
 	}
-	return s.execCommand(path, s.appendLoadStatement(name, env, functionAndArgs)...)
+	return s.exec.command(path, s.appendLoadStatement(name, env, functionAndArgs)...)
 }
 
 func (s WorkspaceManager) Remove(name string) error {
@@ -287,7 +288,7 @@ func (s WorkspaceManager) appendLoadStatement(name string, env string, functionA
 }
 
 func (s WorkspaceManager) editFile(filepath string) error {
-	return s.execCommand("", "-c", fmt.Sprintf("%s %s", s.editor, filepath))
+	return s.exec.command("", "-c", fmt.Sprintf("%s %s", s.editor, filepath))
 }
 
 func (s WorkspaceManager) createFile(filepath string) error {
@@ -388,13 +389,21 @@ func (s WorkspaceManager) createEnvVariableStatement(name string, value string) 
 	return ""
 }
 
-func execCommand(shellBin string) func(path string, args ...string) error {
-	return func(path string, args ...string) error {
-		command := exec.Command(shellBin, args...)
-		command.Stdout = os.Stdout
-		command.Stdin = os.Stdin
-		command.Stderr = os.Stderr
-		command.Dir = path
-		return command.Run()
+type command struct {
+	shellBin string
+}
+
+func newCommand(shellBin string) *command {
+	return &command{
+		shellBin: shellBin,
 	}
+}
+
+func (c *command) command(path string, args ...string) error {
+	command := exec.Command(c.shellBin, args...)
+	command.Stdout = os.Stdout
+	command.Stdin = os.Stdin
+	command.Stderr = os.Stderr
+	command.Dir = path
+	return command.Run()
 }

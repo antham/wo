@@ -288,18 +288,18 @@ func TestCreateEnv(t *testing.T) {
 func TestEdit(t *testing.T) {
 	type scenario struct {
 		name  string
-		setup func(*testing.T, WorkspaceManager)
-		test  func(*testing.T, []string)
+		setup func(*testing.T, WorkspaceManager, *MockCommander)
+		test  func(*testing.T)
 	}
 	scenarios := []scenario{
 		{
 			"Edit workspace",
-			func(t *testing.T, w WorkspaceManager) {
+			func(t *testing.T, w WorkspaceManager, exec *MockCommander) {
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/functions/test.bash", getConfigPath(t))).Return(nil)
 				err := w.Create("test", getProjectPath(t))
 				assert.NoError(t, err)
 			},
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/functions/test.bash", getConfigPath(t))}, args)
+			func(t *testing.T) {
 				f, err := os.Stat(fmt.Sprintf("%s/envs/test/default.bash", getConfigPath(t)))
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", f.Name())
@@ -311,38 +311,34 @@ func TestEdit(t *testing.T) {
 			os.RemoveAll(getConfigPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
 			assert.NoError(t, err)
-			s.setup(t, w)
-			args := []string{}
-			w.execCommand = func(p string, a ...string) error {
-				args = a
-				return nil
-			}
-			assert.NoError(t, err)
+			exec := NewMockCommander(t)
+			w.exec = exec
+			s.setup(t, w, exec)
 			assert.NoError(t, w.Edit("test"))
-			s.test(t, args)
+			s.test(t)
 		})
 	}
 }
 
 func TestEditEnv(t *testing.T) {
 	type scenario struct {
-		name string
-		env  string
-		test func(*testing.T, []string)
+		name  string
+		env   string
+		setup func(*testing.T, *MockCommander)
 	}
 	scenarios := []scenario{
 		{
 			"Edit default workspace",
 			"",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/envs/test/default.bash", getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/envs/test/default.bash", getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Edit prod workspace",
 			"prod",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("emacs %s/envs/test/prod.bash", getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/envs/test/prod.bash", getConfigPath(t))).Return(nil)
 			},
 		},
 	}
@@ -355,14 +351,10 @@ func TestEditEnv(t *testing.T) {
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
-			args := []string{}
-			w.execCommand = func(p string, a ...string) error {
-				args = a
-				return nil
-			}
-			assert.NoError(t, err)
+			exec := NewMockCommander(t)
+			w.exec = exec
+			s.setup(t, exec)
 			assert.NoError(t, w.EditEnv("test", s.env))
-			s.test(t, args)
 		})
 	}
 }
@@ -372,39 +364,39 @@ func TestLoad(t *testing.T) {
 		name  string
 		env   string
 		shell string
-		test  func(*testing.T, []string)
+		setup func(*testing.T, *MockCommander)
 	}
 	scenarios := []scenario{
 		{
 			"Load workspace with a bash shell",
 			"",
 			"/bin/bash",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Load workspace with a fish shell",
 			"",
 			"/bin/fish",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Load workspace with an env defined and a bash shell",
 			"prod",
 			"/bin/bash",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Load workspace with an env defined and a fish shell",
 			"prod",
 			"/bin/fish",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))).Return(nil)
 			},
 		},
 	}
@@ -417,14 +409,10 @@ func TestLoad(t *testing.T) {
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
-			args := []string{}
-			w.execCommand = func(p string, a ...string) error {
-				args = a
-				return nil
-			}
-			assert.NoError(t, err)
+			exec := NewMockCommander(t)
+			w.exec = exec
+			s.setup(t, exec)
 			assert.NoError(t, w.Load("test", s.env))
-			s.test(t, args)
 		})
 	}
 }
@@ -435,7 +423,7 @@ func TestRunFunction(t *testing.T) {
 		functionAndArgs []string
 		env             string
 		shell           string
-		test            func(*testing.T, []string)
+		setup           func(*testing.T, *MockCommander)
 	}
 	scenarios := []scenario{
 		{
@@ -443,8 +431,8 @@ func TestRunFunction(t *testing.T) {
 			[]string{"run-db"},
 			"",
 			"/bin/bash",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash && run-db", getConfigPath(t), getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash && run-db", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
@@ -452,8 +440,8 @@ func TestRunFunction(t *testing.T) {
 			[]string{"run-db"},
 			"",
 			"/bin/fish",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db"}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db").Return(nil)
 			},
 		},
 		{
@@ -461,8 +449,8 @@ func TestRunFunction(t *testing.T) {
 			[]string{"run-db", "watch"},
 			"prod",
 			"/bin/bash",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash && run-db watch", getConfigPath(t), getConfigPath(t))}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash && run-db watch", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
@@ -470,8 +458,8 @@ func TestRunFunction(t *testing.T) {
 			[]string{"run-db", "watch"},
 			"prod",
 			"/bin/fish",
-			func(t *testing.T, args []string) {
-				assert.Equal(t, []string{"-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db watch"}, args)
+			func(t *testing.T, exec *MockCommander) {
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db watch").Return(nil)
 			},
 		},
 	}
@@ -484,14 +472,10 @@ func TestRunFunction(t *testing.T) {
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
-			args := []string{}
-			w.execCommand = func(p string, a ...string) error {
-				args = a
-				return nil
-			}
-			assert.NoError(t, err)
+			exec := NewMockCommander(t)
+			w.exec = exec
+			s.setup(t, exec)
 			assert.NoError(t, w.RunFunction("test", s.env, s.functionAndArgs))
-			s.test(t, args)
 		})
 	}
 }
