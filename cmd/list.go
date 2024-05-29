@@ -12,7 +12,7 @@ import (
 func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
-		Short: "List workspace",
+		Short: "List workspaces",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workspaces, err := workspaceManager.List()
