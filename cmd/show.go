@@ -11,7 +11,7 @@ import (
 func newShowCmd(workspaceManager workspaceManager, completionManager completionManager) *cobra.Command {
 	return &cobra.Command{
 		Use:               "show workspace",
-		Short:             "Show all functions available in a workspace",
+		Short:             "Show functions and envs available in a workspace",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: completionManager.Process,
 		RunE: func(cmd *cobra.Command, args []string) error {
