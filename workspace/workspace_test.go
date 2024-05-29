@@ -359,64 +359,6 @@ func TestEditEnv(t *testing.T) {
 	}
 }
 
-func TestLoad(t *testing.T) {
-	type scenario struct {
-		name  string
-		env   string
-		shell string
-		setup func(*testing.T, *MockCommander)
-	}
-	scenarios := []scenario{
-		{
-			"Load workspace with a bash shell",
-			"",
-			"/bin/bash",
-			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))).Return(nil)
-			},
-		},
-		{
-			"Load workspace with a fish shell",
-			"",
-			"/bin/fish",
-			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))).Return(nil)
-			},
-		},
-		{
-			"Load workspace with an env defined and a bash shell",
-			"prod",
-			"/bin/bash",
-			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash", getConfigPath(t), getConfigPath(t))).Return(nil)
-			},
-		},
-		{
-			"Load workspace with an env defined and a fish shell",
-			"prod",
-			"/bin/fish",
-			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t))).Return(nil)
-			},
-		},
-	}
-	for _, s := range scenarios {
-		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
-			assert.NoError(t, err)
-			err = w.Create("test", getProjectPath(t))
-			assert.NoError(t, err)
-			err = w.CreateEnv("test", "prod")
-			assert.NoError(t, err)
-			exec := NewMockCommander(t)
-			w.exec = exec
-			s.setup(t, exec)
-			assert.NoError(t, w.Load("test", s.env))
-		})
-	}
-}
-
 func TestRunFunction(t *testing.T) {
 	type scenario struct {
 		name            string

@@ -200,18 +200,6 @@ func (s WorkspaceManager) EditEnv(name string, env string) error {
 	return s.editFile(envFile)
 }
 
-func (s WorkspaceManager) Load(name string, env string) error {
-	p, err := s.GetConfig(name, "path")
-	if err != nil {
-		return err
-	}
-	path := ""
-	if p != nil {
-		path = p.(string)
-	}
-	return s.exec.command(path, s.appendLoadStatement(name, env, []string{})...)
-}
-
 func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs []string) error {
 	p, err := s.GetConfig(name, "path")
 	if err != nil {

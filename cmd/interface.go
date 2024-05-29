@@ -11,7 +11,6 @@ type workspaceManager interface {
 	CreateEnv(string, string) error
 	Edit(string) error
 	EditEnv(string, string) error
-	Load(string, string) error
 	List() ([]workspace.Workspace, error)
 	RunFunction(string, string, []string) error
 	Remove(string) error

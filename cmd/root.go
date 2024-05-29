@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var env string
+
 func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "wo",
@@ -66,7 +68,6 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
-	rootCmd.AddCommand(newLoadCmd(w, envCompMgr))
 	rootCmd.AddCommand(newRemoveCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newRunCmd(w, funcCompMgr))
 	rootCmd.AddCommand(newShowCmd(w, wksCompMgr))
