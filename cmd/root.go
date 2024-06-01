@@ -18,6 +18,7 @@ func newRootCmd() *cobra.Command {
 		Use:   "wo",
 		Short: "Manage workspaces in shell",
 	}
+	rootCmd.SetOut(os.Stdout)
 
 	err := viper.BindEnv("WO_DEBUG")
 	if err != nil {
