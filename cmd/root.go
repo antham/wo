@@ -65,6 +65,7 @@ func newRootCmd() *cobra.Command {
 
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(envCmd)
+	rootCmd.AddCommand(newAliasCmd(w))
 	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newListCmd(w))

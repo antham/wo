@@ -518,3 +518,48 @@ func TestSetConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildAliases(t *testing.T) {
+	type scenario struct {
+		name   string
+		prefix string
+		test   func(*testing.T, []string, error)
+	}
+	scenarios := []scenario{
+		{
+			"Build aliases for all workspace",
+			"",
+			func(t *testing.T, aliases []string, e error) {
+				assert.NoError(t, e)
+				assert.Equal(t, []string{
+					fmt.Sprintf(`alias c_front="cd %s/front"`, getProjectPath(t)),
+					fmt.Sprintf(`alias c_test="cd %s/test"`, getProjectPath(t)),
+				}, aliases)
+			},
+		},
+		{
+			"Build aliases with a different prefix",
+			"xx",
+			func(t *testing.T, aliases []string, e error) {
+				assert.NoError(t, e)
+				assert.Equal(t, []string{
+					fmt.Sprintf(`alias xxfront="cd %s/front"`, getProjectPath(t)),
+					fmt.Sprintf(`alias xxtest="cd %s/test"`, getProjectPath(t)),
+				}, aliases)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			os.RemoveAll(getConfigPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("test", fmt.Sprintf("%s/test", getProjectPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("front", fmt.Sprintf("%s/front", getProjectPath(t)))
+			assert.NoError(t, err)
+			aliases, err := w.BuildAliases(s.prefix)
+			s.test(t, aliases, err)
+		})
+	}
+}

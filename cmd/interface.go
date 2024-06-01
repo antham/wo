@@ -6,6 +6,7 @@ import (
 )
 
 type workspaceManager interface {
+	BuildAliases(string) ([]string, error)
 	Get(string) (workspace.Workspace, error)
 	Create(string, string) error
 	CreateEnv(string, string) error

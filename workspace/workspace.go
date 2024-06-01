@@ -92,6 +92,25 @@ func WithConfigPath(path string) func(*WorkspaceManager) {
 	}
 }
 
+func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
+	if prefix == "" {
+		prefix = "c_"
+	}
+	workspaces, err := s.List()
+	if err != nil {
+		return []string{}, err
+	}
+	aliases := []string{}
+	for _, w := range workspaces {
+		p, err := s.GetConfig(w.Name, "path")
+		if err != nil {
+			return []string{}, err
+		}
+		aliases = append(aliases, fmt.Sprintf(`alias %s%s="cd %s"`, prefix, w.Name, p))
+	}
+	return aliases, nil
+}
+
 func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
 	err := filepath.Walk(s.getFunctionDir(), func(path string, info fs.FileInfo, err error) error {
