@@ -1,5 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash -i
 
+set -exuo pipefail
+
+export WO_DEBUG=true
 export SHELL=/bin/bash
 export VISUAL=cat
 
@@ -17,7 +20,7 @@ echo "Workspaces
 * db
 * front" > /tmp/expected-workspaces
 
-wo list 2> /tmp/actual-workspaces
+wo list > /tmp/actual-workspaces
 
 diff /tmp/expected-workspaces /tmp/actual-workspaces
 
@@ -25,7 +28,7 @@ diff /tmp/expected-workspaces /tmp/actual-workspaces
 
 echo '
 # Hello world function
-test() {
+hello() {
   echo "Hello world !"
 }
 ' > ~/.config/wo/functions/api.bash
@@ -34,16 +37,24 @@ echo "Workspace api
 ---
 Functions
 
-* test : Hello world function
+* hello : Hello world function
 ---
 Envs
 
 * default" > /tmp/expected-api-workspace
 
-wo show api 2> /tmp/actual-api-workspace
+wo show api > /tmp/actual-api-workspace
 
 diff /tmp/expected-api-workspace /tmp/actual-api-workspace
 
 # Run a function in a workspace
 
-test "$(wo r api test)" = "Hello world !"
+test "$(wo r api hello)" = "Hello world !"
+
+# Use aliases
+
+shopt -s expand_aliases
+source <(wo alias)
+
+c_api
+test "$PWD" = "$HOME/api"
