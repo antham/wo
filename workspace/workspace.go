@@ -14,7 +14,6 @@ import (
 	"slices"
 	"sort"
 	"strings"
-	"syscall"
 
 	"github.com/antham/wo/shell"
 	"github.com/spf13/viper"
@@ -252,18 +251,6 @@ func (s WorkspaceManager) GetConfig(name string, key string) (any, error) {
 		return nil, err
 	}
 	return v.Get(key), nil
-}
-
-func (s WorkspaceManager) Cd(name string) error {
-	p, err := s.GetConfig(name, "path")
-	if err != nil {
-		return err
-	}
-	err = os.Chdir(p.(string))
-	if err != nil {
-		return err
-	}
-	return syscall.Exec(s.shellBin, []string{""}, os.Environ())
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {

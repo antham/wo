@@ -16,7 +16,6 @@ type workspaceManager interface {
 	RunFunction(string, string, []string) error
 	Remove(string) error
 	SetConfig(string, string, string) error
-	Cd(string) error
 }
 
 type completionManager interface {

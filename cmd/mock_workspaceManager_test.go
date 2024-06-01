@@ -42,24 +42,6 @@ func (_m *mockWorkspaceManager) BuildAliases(_a0 string) ([]string, error) {
 	return r0, r1
 }
 
-// Cd provides a mock function with given fields: _a0
-func (_m *mockWorkspaceManager) Cd(_a0 string) error {
-	ret := _m.Called(_a0)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Cd")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // Create provides a mock function with given fields: _a0, _a1
 func (_m *mockWorkspaceManager) Create(_a0 string, _a1 string) error {
 	ret := _m.Called(_a0, _a1)
