@@ -9,3 +9,8 @@ RUN go mod download && go mod verify
 
 COPY . .
 RUN go build -o /usr/local/bin/wo main.go
+
+RUN cat e2e-scripts/init.sh e2e-scripts/test > e2e-scripts/test.sh
+RUN cat e2e-scripts/init.bash e2e-scripts/test > e2e-scripts/test.bash
+RUN cat e2e-scripts/init.zsh e2e-scripts/test > e2e-scripts/test.zsh
+RUN cat e2e-scripts/init.fish e2e-scripts/test > e2e-scripts/test.fish

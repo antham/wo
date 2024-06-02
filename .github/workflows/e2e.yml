@@ -31,7 +31,10 @@ jobs:
           tags: ${{ env.TAG }}
       - name: Run bash tests
         run: |
-          docker run --rm ${{ env.TAG }} bash e2e-scripts/test /usr/src/app/e2e-scripts/init.bash
+          docker run --rm ${{ env.TAG }} bash /usr/src/app/e2e-scripts/test.bash
       - name: Run sh tests
         run: |
-          docker run --rm ${{ env.TAG }} sh e2e-scripts/test /usr/src/app/e2e-scripts/init.sh
+          docker run --rm ${{ env.TAG }} sh /usr/src/app/e2e-scripts/test.sh
+      - name: Run fish tests
+        run: |
+          docker run --rm ${{ env.TAG }} fish /usr/src/app/e2e-scripts/test.fish
