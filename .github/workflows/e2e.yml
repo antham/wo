@@ -15,7 +15,7 @@ env:
   TAG: e2e
 
 jobs:
-  e2e:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,6 +29,9 @@ jobs:
           load: true
           file: ./Dockerfile.test
           tags: ${{ env.TAG }}
-      - name: Bash tests
+      - name: Run bash tests
         run: |
-          docker run --rm ${{ env.TAG }} bash e2e-scripts/test.bash
+          docker run --rm ${{ env.TAG }} bash e2e-scripts/test /usr/src/app/e2e-scripts/init.bash
+      - name: Run sh tests
+        run: |
+          docker run --rm ${{ env.TAG }} sh e2e-scripts/test /usr/src/app/e2e-scripts/init.sh

@@ -1,10 +1,11 @@
-#!/bin/bash -i
-
 set -exuo pipefail
 
-export WO_DEBUG=true
-export SHELL=/bin/bash
-export VISUAL=cat
+source $1
+
+if [[ "$SHELL" == "/bin/bash" || "$SHELL" == "/bin/sh" ]]; then
+    export WO_DEBUG=true
+    export VISUAL=cat
+fi
 
 mkdir -p ~/api ~/front ~/db
 
@@ -32,6 +33,7 @@ hello() {
   echo "Hello world !"
 }
 ' > ~/.config/wo/functions/api.bash
+cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.sh
 
 echo "Workspace api
 ---
@@ -53,8 +55,13 @@ test "$(wo r api hello)" = "Hello world !"
 
 # Use aliases
 
-shopt -s expand_aliases
-source <(wo alias)
+if [[ "$SHELL" == "/bin/bash"  ]]; then
+    shopt -s expand_aliases
+fi
+
+if [[ "$SHELL" == "/bin/bash" ||  "$SHELL" == "/bin/sh" ]]; then
+    source <(wo alias)
+fi
 
 c_api
 test "$PWD" = "$HOME/api"
