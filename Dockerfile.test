@@ -9,5 +9,3 @@ RUN go mod download && go mod verify
 
 COPY . .
 RUN go build -o /usr/local/bin/wo main.go
-
-RUN bash e2e-scripts/test.bash
