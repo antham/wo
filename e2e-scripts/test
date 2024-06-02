@@ -26,6 +26,7 @@ hello() {
 ' > ~/.config/wo/functions/api.bash
 cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.sh
 cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.fish
+cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.zsh
 
 echo "Workspace api
 ---

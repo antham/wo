@@ -38,3 +38,6 @@ jobs:
       - name: Run fish tests
         run: |
           docker run --rm ${{ env.TAG }} fish /usr/src/app/e2e-scripts/test.fish
+      - name: Run zsh tests
+        run: |
+          docker run --rm ${{ env.TAG }} zsh /usr/src/app/e2e-scripts/test.zsh
