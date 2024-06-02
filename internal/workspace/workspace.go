@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antham/wo/shell"
+	"github.com/antham/wo/internal/shell"
 	"github.com/spf13/viper"
 )
 

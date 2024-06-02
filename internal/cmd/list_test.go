@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/antham/wo/workspace"
+	"github.com/antham/wo/internal/workspace"
 	"github.com/stretchr/testify/assert"
 )
 

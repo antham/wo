@@ -3,7 +3,7 @@
 package cmd
 
 import (
-	workspace "github.com/antham/wo/workspace"
+	workspace "github.com/antham/wo/internal/workspace"
 	mock "github.com/stretchr/testify/mock"
 )
 

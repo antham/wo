@@ -1,6 +1,6 @@
 package completion
 
-import "github.com/antham/wo/workspace"
+import "github.com/antham/wo/internal/workspace"
 
 type workspaceManager interface {
 	List() ([]workspace.Workspace, error)

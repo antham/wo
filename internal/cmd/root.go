@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/antham/wo/cmd/internal/completion"
-	"github.com/antham/wo/workspace"
+	"github.com/antham/wo/internal/cmd/internal/completion"
+	"github.com/antham/wo/internal/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

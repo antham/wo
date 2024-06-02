@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/antham/wo/workspace"
+	"github.com/antham/wo/internal/workspace"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
