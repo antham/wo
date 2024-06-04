@@ -29,6 +29,15 @@ func TestNewCreateEnvCmd(t *testing.T) {
 			},
 		},
 		{
+			"Creating an invalid env",
+			func(t *testing.T) (workspaceManager, []string) {
+				return newMockWorkspaceManager(t), []string{"api", "prod%"}
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
 			"Creating a workspace env successfully",
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
