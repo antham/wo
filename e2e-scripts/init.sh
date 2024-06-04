@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -exuo pipefail
+set -xu
 
 export WO_DEBUG=true
 export VISUAL=cat

@@ -53,3 +53,28 @@ source /tmp/alias
 
 c_api
 test "$PWD" = "$HOME/api"
+
+# Remove a workspace
+
+wo remove api
+
+echo "Error: the workspace does not exist
+Usage:
+  wo show workspace [flags]
+
+Flags:
+  -h, --help   help for show
+" > /tmp/expected-show-error
+
+wo show api &> /tmp/actual-show-error
+
+diff /tmp/expected-show-error /tmp/actual-show-error
+
+echo "Workspaces
+---
+* db
+* front" > /tmp/expected-workspaces
+
+wo list > /tmp/actual-workspaces
+
+diff /tmp/expected-workspaces /tmp/actual-workspaces
