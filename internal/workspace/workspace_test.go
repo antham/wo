@@ -124,6 +124,26 @@ func TestList(t *testing.T) {
 				}, ws)
 			},
 		},
+		{
+			"Only get one entry if several are defined for several shells",
+			func(t *testing.T, w WorkspaceManager) {
+				assert.NoError(t, w.Create("api", getProjectPath(t)))
+				assert.NoError(t, w.CreateEnv("api", "dev"))
+				assert.NoError(t, w.Create("db", getProjectPath(t)))
+				assert.NoError(t, w.CreateEnv("db", "staging"))
+				assert.NoError(t, w.Create("front", getProjectPath(t)))
+				assert.NoError(t, w.CreateEnv("front", "prod"))
+			},
+			func(t *testing.T, ws []Workspace, err error) {
+				assert.NoError(t, err)
+				assert.Len(t, ws, 3)
+				assert.Equal(t, []Workspace{
+					{Name: "api", Functions: []Function{}, Envs: []string{"default", "dev"}},
+					{Name: "db", Functions: []Function{}, Envs: []string{"default", "staging"}},
+					{Name: "front", Functions: []Function{}, Envs: []string{"default", "prod"}},
+				}, ws)
+			},
+		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {

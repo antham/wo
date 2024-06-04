@@ -119,6 +119,10 @@ func (s WorkspaceManager) List() ([]Workspace, error) {
 		if info.IsDir() {
 			return nil
 		}
+
+		if strings.Trim(filepath.Ext(info.Name()), ".") != s.shell {
+			return nil
+		}
 		name := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 		workspace, err := s.Get(name)
 		if err != nil {
