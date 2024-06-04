@@ -235,7 +235,7 @@ func (s WorkspaceManager) Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	return errors.Join(os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
+	return errors.Join(os.Remove(s.resolveConfigFile(name)), os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
 }
 
 func (s WorkspaceManager) SetConfig(name string, key string, value string) error {

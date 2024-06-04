@@ -448,6 +448,8 @@ func TestRemove(t *testing.T) {
 				assert.True(t, os.IsNotExist(err))
 				_, err = os.Stat(path + "/functions/test.bash")
 				assert.True(t, os.IsNotExist(err))
+				_, err = os.Stat(path + "/configs/test.toml")
+				assert.True(t, os.IsNotExist(err))
 
 				_, err = os.Stat(path + "/functions/front.bash")
 				assert.NoError(t, err)
