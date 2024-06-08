@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -112,27 +111,16 @@ func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
 
 func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
-	err := filepath.Walk(s.getFunctionDir(), func(path string, info fs.FileInfo, err error) error {
+	entries, err := os.ReadDir(s.configDir)
+	if err != nil {
+		return workspaces, err
+	}
+	for _, e := range entries {
+		workspace, err := s.Get(e.Name())
 		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		if strings.Trim(filepath.Ext(info.Name()), ".") != s.shell {
-			return nil
-		}
-		name := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-		workspace, err := s.Get(name)
-		if err != nil {
-			return err
+			return workspaces, err
 		}
 		workspaces = append(workspaces, workspace)
-		return nil
-	})
-	if err != nil {
-		return []Workspace{}, err
 	}
 	return workspaces, nil
 }
@@ -171,7 +159,7 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 }
 
 func (s WorkspaceManager) Create(name string, path string) error {
-	err := s.createWorkspaceEnvFolder(name)
+	err := s.createWorkspaceFolder(name)
 	if err != nil {
 		return err
 	}
@@ -239,7 +227,7 @@ func (s WorkspaceManager) Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	return errors.Join(os.Remove(s.resolveConfigFile(name)), os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
+	return os.RemoveAll(s.getWorkspaceDir(name))
 }
 
 func (s WorkspaceManager) SetConfig(name string, key string, value string) error {
@@ -303,7 +291,7 @@ func (s WorkspaceManager) resolveEnv(env string) string {
 
 func (s WorkspaceManager) listEnvs(name string) ([]string, error) {
 	envs := []string{}
-	dir := s.getWorkspaceEnvDir(name)
+	dir := s.getWorkspaceEnvsDir(name)
 	file, err := os.Open(dir)
 	if err != nil {
 		return envs, err
@@ -320,15 +308,15 @@ func (s WorkspaceManager) listEnvs(name string) ([]string, error) {
 }
 
 func (s WorkspaceManager) resolveFunctionFile(name string) string {
-	return fmt.Sprintf("%s/%s.%s", s.getFunctionDir(), name, s.getExtension())
+	return fmt.Sprintf("%s/functions.%s", s.getWorkspaceFunctionsDir(name), s.getExtension())
 }
 
 func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
-	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvDir(name), s.resolveEnv(env), s.getExtension())
+	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvsDir(name), s.resolveEnv(env), s.getExtension())
 }
 
 func (s WorkspaceManager) resolveConfigFile(name string) string {
-	return fmt.Sprintf("%s/%s.toml", s.getConfigDir(), name)
+	return fmt.Sprintf("%s/config.toml", s.getWorkspaceDir(name))
 }
 
 func (s WorkspaceManager) getExtension() string {
@@ -341,38 +329,32 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
+	return os.MkdirAll(s.configDir, 0o777)
+}
+
+func (s WorkspaceManager) createWorkspaceFolder(name string) error {
 	return errors.Join(
-		os.MkdirAll(s.configDir, 0o777),
-		os.MkdirAll(s.getFunctionDir(), 0o777),
-		os.MkdirAll(s.getEnvDir(), 0o777),
-		os.MkdirAll(s.getConfigDir(), 0o777),
+		os.MkdirAll(s.getWorkspaceFunctionsDir(name), 0o777),
+		os.MkdirAll(s.getWorkspaceEnvsDir(name), 0o777),
 	)
 }
 
-func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
-	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0o777)
+func (s WorkspaceManager) getWorkspaceDir(name string) string {
+	return fmt.Sprintf("%s/%s", s.configDir, name)
 }
 
-func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions", s.configDir)
+func (s WorkspaceManager) getWorkspaceFunctionsDir(name string) string {
+	return fmt.Sprintf("%s/functions", s.getWorkspaceDir(name))
 }
 
-func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs", s.configDir)
-}
-
-func (s WorkspaceManager) getConfigDir() string {
-	return fmt.Sprintf("%s/configs", s.configDir)
-}
-
-func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
-	return fmt.Sprintf("%s/%s", s.getEnvDir(), name)
+func (s WorkspaceManager) getWorkspaceEnvsDir(name string) string {
+	return fmt.Sprintf("%s/envs", s.getWorkspaceDir(name))
 }
 
 func (s WorkspaceManager) getViper(name string) *viper.Viper {
 	v := viper.New()
-	v.AddConfigPath(fmt.Sprintf("%s/", s.getConfigDir()))
-	v.SetConfigName(name)
+	v.AddConfigPath(fmt.Sprintf("%s/", s.getWorkspaceDir(name)))
+	v.SetConfigName("config")
 	v.SetConfigType("toml")
 	return v
 }
