@@ -62,7 +62,7 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 			for _, e := range wo.Envs {
 				envs = append(envs, lipgloss.NewStyle().
 					Foreground(lipgloss.Color("#8ECDDD")).
-					Render(fmt.Sprintf("* %s", e)))
+					Render(fmt.Sprintf("* %s", e.Name)))
 			}
 			if len(wo.Envs) == 0 {
 				envs = append(envs, lipgloss.NewStyle().
