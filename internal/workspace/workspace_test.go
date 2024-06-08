@@ -246,7 +246,7 @@ func TestCreate(t *testing.T) {
 				assert.Equal(t, "config.toml", configFile.Name())
 				b, err := os.ReadFile(path + "/test/config.toml")
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("path = '%s'\n", getProjectPath(t)), string(b))
+				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", getProjectPath(t)), string(b))
 			},
 		},
 	}
@@ -512,7 +512,7 @@ func TestSetConfig(t *testing.T) {
 				assert.NoError(t, err)
 				b, err := os.ReadFile(fmt.Sprintf("%s/%s", getConfigPath(t), "test/config.toml"))
 				assert.NoError(t, err)
-				assert.Equal(t, []byte("path = '/home/user/project'\n"), b)
+				assert.Equal(t, []byte("app = 'bash'\npath = '/home/user/project'\n"), b)
 			},
 		},
 		{
@@ -532,7 +532,7 @@ func TestSetConfig(t *testing.T) {
 			assert.NoError(t, err)
 			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
-			s.test(t, w.SetConfig(s.workspace, s.key, s.value))
+			s.test(t, w.SetConfig(s.workspace, map[string]string{s.key: s.value}))
 		})
 	}
 }

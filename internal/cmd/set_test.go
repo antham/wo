@@ -21,7 +21,7 @@ func TestNewSetCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api", "path", "/home/user/project"}
-				w.Mock.On("SetConfig", args[0], args[1], args[2]).Return(errors.New("an error occurred"))
+				w.Mock.On("SetConfig", args[0], map[string]string{args[1]: args[2]}).Return(errors.New("an error occurred"))
 				return w, args
 			},
 			func(t *testing.T, err error) {
@@ -33,7 +33,7 @@ func TestNewSetCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api", "path", "/home/user/project"}
-				w.Mock.On("SetConfig", args[0], args[1], args[2]).Return(nil)
+				w.Mock.On("SetConfig", args[0], map[string]string{args[1]: args[2]}).Return(nil)
 				return w, args
 			},
 			func(t *testing.T, err error) {

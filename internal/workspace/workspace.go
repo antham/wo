@@ -175,7 +175,13 @@ func (s WorkspaceManager) Create(name string, path string) error {
 	if err != nil {
 		return err
 	}
-	return s.SetConfig(name, "path", path)
+	return s.SetConfig(
+		name,
+		map[string]string{
+			"app":  s.shell,
+			"path": path,
+		},
+	)
 }
 
 func (s WorkspaceManager) CreateEnv(name string, env string) error {
@@ -230,9 +236,15 @@ func (s WorkspaceManager) Remove(name string) error {
 	return os.RemoveAll(s.getWorkspaceDir(name))
 }
 
-func (s WorkspaceManager) SetConfig(name string, key string, value string) error {
+func (s WorkspaceManager) SetConfig(name string, kv map[string]string) error {
 	v := s.getViper(name)
-	v.Set(key, value)
+	err := v.ReadInConfig()
+	if err != nil {
+		return err
+	}
+	for key, value := range kv {
+		v.Set(key, value)
+	}
 	return v.WriteConfig()
 }
 
@@ -367,6 +379,10 @@ func (s WorkspaceManager) createEnvVariableStatement(name string, value string) 
 		return fmt.Sprintf("set -x -g %s %s", name, value)
 	}
 	return ""
+}
+
+func (s WorkspaceManager) checkWorkspace(name string) error {
+
 }
 
 type command struct {

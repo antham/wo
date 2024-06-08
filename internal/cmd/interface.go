@@ -15,7 +15,7 @@ type workspaceManager interface {
 	List() ([]workspace.Workspace, error)
 	RunFunction(string, string, []string) error
 	Remove(string) error
-	SetConfig(string, string, string) error
+	SetConfig(string, map[string]string) error
 }
 
 type completionManager interface {
