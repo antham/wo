@@ -22,6 +22,6 @@ func newRunCmd(workspaceManager workspaceManager, completionManager completionMa
 			return err
 		},
 	}
-	runCmd.Flags().StringVarP(&env, "env", "e", "", "Environment to use (e.g. prod)")
+	runCmd.Flags().StringVarP(&env, "env", "e", "default", "Environment to use (e.g. prod)")
 	return runCmd
 }

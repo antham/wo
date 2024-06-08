@@ -21,7 +21,7 @@ func TestNewRunCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api", "start"}
-				w.Mock.On("RunFunction", args[0], "", []string{args[1]}).Return(nil)
+				w.Mock.On("RunFunction", args[0], "default", []string{args[1]}).Return(nil)
 				return w, args
 			},
 			func(t *testing.T, err error) {
@@ -33,7 +33,7 @@ func TestNewRunCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api", "start"}
-				w.Mock.On("RunFunction", args[0], "", []string{args[1]}).Return(errors.New("an error occurred"))
+				w.Mock.On("RunFunction", args[0], "default", []string{args[1]}).Return(errors.New("an error occurred"))
 				return w, args
 			},
 			func(t *testing.T, err error) {
