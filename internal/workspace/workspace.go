@@ -120,6 +120,9 @@ func (s WorkspaceManager) List() ([]Workspace, error) {
 		return workspaces, err
 	}
 	for _, e := range entries {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
 		workspace, err := s.getWorkspace(e.Name())
 		if err != nil {
 			return workspaces, err
