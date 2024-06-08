@@ -23,10 +23,10 @@ echo '
 hello() {
   echo "Hello world !"
 }
-' > ~/.config/wo/functions/api.bash
-cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.sh
-cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.fish
-cp ~/.config/wo/functions/api.bash ~/.config/wo/functions/api.zsh
+' > ~/.config/wo/api/functions/functions.bash
+cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.sh
+cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.fish
+cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.zsh
 
 echo "Workspace api
 ---
