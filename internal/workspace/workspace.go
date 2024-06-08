@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -32,14 +31,22 @@ const (
 )
 
 type Workspace struct {
-	Name      string
-	Functions []Function
-	Envs      []string
+	Name         string
+	Functions    []Function
+	Envs         []Env
+	Config       map[string]string
+	workspaceDir string
+	functionFile string
 }
 
 type Function struct {
 	Name        string
 	Description string
+}
+
+type Env struct {
+	Name string
+	file string
 }
 
 type WorkspaceManager struct {
@@ -101,77 +108,33 @@ func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
 	}
 	aliases := []string{}
 	for _, w := range workspaces {
-		p, err := s.GetConfig(w.Name, "path")
-		if err != nil {
-			return []string{}, err
-		}
-		aliases = append(aliases, fmt.Sprintf(`alias %s%s="cd %s"`, prefix, w.Name, p))
+		aliases = append(aliases, fmt.Sprintf(`alias %s%s="cd %s"`, prefix, w.Name, w.Config["path"]))
 	}
 	return aliases, nil
 }
 
 func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
-	err := filepath.Walk(s.getFunctionDir(), func(path string, info fs.FileInfo, err error) error {
+	entries, err := os.ReadDir(s.configDir)
+	if err != nil {
+		return workspaces, err
+	}
+	for _, e := range entries {
+		workspace, err := s.getWorkspace(e.Name())
 		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		if strings.Trim(filepath.Ext(info.Name()), ".") != s.shell {
-			return nil
-		}
-		name := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-		workspace, err := s.Get(name)
-		if err != nil {
-			return err
+			return workspaces, err
 		}
 		workspaces = append(workspaces, workspace)
-		return nil
-	})
-	if err != nil {
-		return []Workspace{}, err
 	}
 	return workspaces, nil
 }
 
 func (s WorkspaceManager) Get(name string) (Workspace, error) {
-	content, err := os.ReadFile(s.resolveFunctionFile(name))
-	if os.IsNotExist(err) {
-		return Workspace{}, errors.New("the workspace does not exist")
-	}
-	if err != nil {
-		return Workspace{}, err
-	}
-	funcs, err := shell.Parse(s.shell, content)
-	if err != nil {
-		return Workspace{}, err
-	}
-	envs, err := s.listEnvs(name)
-	if err != nil {
-		return Workspace{}, err
-	}
-	commands := []Function{}
-	for _, f := range funcs {
-		commands = append(commands, Function{
-			Name:        f.Name,
-			Description: f.Description,
-		})
-	}
-	slices.SortFunc(commands, func(a, b Function) int {
-		return cmp.Compare(a.Name, b.Name)
-	})
-	return Workspace{
-		Name:      name,
-		Functions: commands,
-		Envs:      envs,
-	}, nil
+	return s.getWorkspace(name)
 }
 
 func (s WorkspaceManager) Create(name string, path string) error {
-	err := s.createWorkspaceEnvFolder(name)
+	err := s.createWorkspaceFolder(name)
 	if err != nil {
 		return err
 	}
@@ -187,74 +150,90 @@ func (s WorkspaceManager) Create(name string, path string) error {
 	if err != nil {
 		return err
 	}
-	return s.SetConfig(name, "path", path)
+	return s.SetConfig(
+		name,
+		map[string]string{
+			"app":  s.shell,
+			"path": path,
+		},
+	)
 }
 
 func (s WorkspaceManager) CreateEnv(name string, env string) error {
-	functionFile := s.resolveFunctionFile(name)
-	_, err := os.Stat(functionFile)
+	_, err := s.getWorkspace(name)
 	if err != nil {
-		return fmt.Errorf(`check the workspace "%s" exists, create it first`, name)
+		return err
 	}
 	return s.createFile(s.resolveEnvFile(name, env))
 }
 
 func (s WorkspaceManager) Edit(name string) error {
-	functionFile := s.resolveFunctionFile(name)
-	_, err := os.Stat(functionFile)
+	w, err := s.getWorkspace(name)
 	if err != nil {
-		return fmt.Errorf(`check the workspace "%s" exists`, name)
+		return err
 	}
-	return s.editFile(functionFile)
+	return s.editFile(w.functionFile)
 }
 
 func (s WorkspaceManager) EditEnv(name string, env string) error {
-	functionFile := s.resolveFunctionFile(name)
-	_, err := os.Stat(functionFile)
+	w, err := s.getWorkspace(name)
 	if err != nil {
-		return fmt.Errorf(`check the workspace "%s" exists`, name)
+		return err
 	}
-	envFile := s.resolveEnvFile(name, env)
-	_, err = os.Stat(envFile)
-	if err != nil {
-		return fmt.Errorf(`check the environment "%s" exists`, env)
+	index := slices.IndexFunc(w.Envs, func(e Env) bool {
+		return e.Name == env
+	})
+	if index == -1 {
+		return fmt.Errorf("the env `%s` does not exist", env)
 	}
-	return s.editFile(envFile)
+	return s.editFile(w.Envs[index].file)
 }
 
 func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs []string) error {
-	p, err := s.GetConfig(name, "path")
+	w, err := s.getWorkspace(name)
 	if err != nil {
 		return err
 	}
-	path := ""
-	if p != nil {
-		path = p.(string)
+	if !slices.ContainsFunc(w.Envs, func(e Env) bool {
+		return e.Name == env
+	}) {
+		return fmt.Errorf("the env `%s` does not exist", env)
 	}
-	return s.exec.command(path, s.appendLoadStatement(name, env, functionAndArgs)...)
+	if !slices.ContainsFunc(w.Functions, func(f Function) bool {
+		return f.Name == functionAndArgs[0]
+	}) {
+		return fmt.Errorf("the function `%s` does not exist", functionAndArgs[0])
+	}
+	return s.exec.command(w.Config["path"], s.appendLoadStatement(name, env, functionAndArgs)...)
 }
 
 func (s WorkspaceManager) Remove(name string) error {
-	_, err := s.Get(name)
+	w, err := s.Get(name)
 	if err != nil {
 		return err
 	}
-	return errors.Join(os.Remove(s.resolveConfigFile(name)), os.Remove(s.resolveFunctionFile(name)), os.RemoveAll(s.getWorkspaceEnvDir(name)))
+	return os.RemoveAll(w.workspaceDir)
 }
 
-func (s WorkspaceManager) SetConfig(name string, key string, value string) error {
-	v := s.getViper(name)
-	v.Set(key, value)
-	return v.WriteConfig()
-}
-
-func (s WorkspaceManager) GetConfig(name string, key string) (any, error) {
+func (s WorkspaceManager) SetConfig(name string, kv map[string]string) error {
 	v := s.getViper(name)
 	err := v.ReadInConfig()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return v.Get(key), nil
+	for key, value := range kv {
+		v.Set(key, value)
+	}
+	return v.WriteConfig()
+}
+
+func (s WorkspaceManager) GetConfig(name string, key string) (string, error) {
+	v := s.getViper(name)
+	err := v.ReadInConfig()
+	if err != nil {
+		return "", err
+	}
+	return v.GetString(key), nil
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
@@ -301,34 +280,37 @@ func (s WorkspaceManager) resolveEnv(env string) string {
 	return env
 }
 
-func (s WorkspaceManager) listEnvs(name string) ([]string, error) {
-	envs := []string{}
-	dir := s.getWorkspaceEnvDir(name)
+func (s WorkspaceManager) listEnvs(name string) ([]Env, error) {
+	envs := []Env{}
+	dir := s.getWorkspaceEnvsDir(name)
 	file, err := os.Open(dir)
 	if err != nil {
-		return envs, err
+		return []Env{}, err
 	}
 	fs, err := file.Readdir(-1)
 	if err != nil {
-		return envs, err
+		return []Env{}, err
 	}
 	for _, f := range fs {
-		envs = append(envs, strings.TrimSuffix(f.Name(), filepath.Ext(f.Name())))
+		env := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+		envs = append(envs, Env{Name: env, file: s.resolveEnvFile(name, env)})
 	}
-	sort.Strings(envs)
+	sort.Slice(envs, func(i, j int) bool {
+		return envs[i].Name < envs[j].Name
+	})
 	return envs, err
 }
 
 func (s WorkspaceManager) resolveFunctionFile(name string) string {
-	return fmt.Sprintf("%s/%s.%s", s.getFunctionDir(), name, s.getExtension())
+	return fmt.Sprintf("%s/functions.%s", s.getWorkspaceFunctionsDir(name), s.getExtension())
 }
 
 func (s WorkspaceManager) resolveEnvFile(name string, env string) string {
-	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvDir(name), s.resolveEnv(env), s.getExtension())
+	return fmt.Sprintf("%s/%s.%s", s.getWorkspaceEnvsDir(name), s.resolveEnv(env), s.getExtension())
 }
 
 func (s WorkspaceManager) resolveConfigFile(name string) string {
-	return fmt.Sprintf("%s/%s.toml", s.getConfigDir(), name)
+	return fmt.Sprintf("%s/config.toml", s.getWorkspaceDir(name))
 }
 
 func (s WorkspaceManager) getExtension() string {
@@ -341,38 +323,32 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
+	return os.MkdirAll(s.configDir, 0o777)
+}
+
+func (s WorkspaceManager) createWorkspaceFolder(name string) error {
 	return errors.Join(
-		os.MkdirAll(s.configDir, 0o777),
-		os.MkdirAll(s.getFunctionDir(), 0o777),
-		os.MkdirAll(s.getEnvDir(), 0o777),
-		os.MkdirAll(s.getConfigDir(), 0o777),
+		os.MkdirAll(s.getWorkspaceFunctionsDir(name), 0o777),
+		os.MkdirAll(s.getWorkspaceEnvsDir(name), 0o777),
 	)
 }
 
-func (s WorkspaceManager) createWorkspaceEnvFolder(name string) error {
-	return os.MkdirAll(s.getWorkspaceEnvDir(name), 0o777)
+func (s WorkspaceManager) getWorkspaceDir(name string) string {
+	return fmt.Sprintf("%s/%s", s.configDir, name)
 }
 
-func (s WorkspaceManager) getFunctionDir() string {
-	return fmt.Sprintf("%s/functions", s.configDir)
+func (s WorkspaceManager) getWorkspaceFunctionsDir(name string) string {
+	return fmt.Sprintf("%s/functions", s.getWorkspaceDir(name))
 }
 
-func (s WorkspaceManager) getEnvDir() string {
-	return fmt.Sprintf("%s/envs", s.configDir)
-}
-
-func (s WorkspaceManager) getConfigDir() string {
-	return fmt.Sprintf("%s/configs", s.configDir)
-}
-
-func (s WorkspaceManager) getWorkspaceEnvDir(name string) string {
-	return fmt.Sprintf("%s/%s", s.getEnvDir(), name)
+func (s WorkspaceManager) getWorkspaceEnvsDir(name string) string {
+	return fmt.Sprintf("%s/envs", s.getWorkspaceDir(name))
 }
 
 func (s WorkspaceManager) getViper(name string) *viper.Viper {
 	v := viper.New()
-	v.AddConfigPath(fmt.Sprintf("%s/", s.getConfigDir()))
-	v.SetConfigName(name)
+	v.AddConfigPath(fmt.Sprintf("%s/", s.getWorkspaceDir(name)))
+	v.SetConfigName("config")
 	v.SetConfigType("toml")
 	return v
 }
@@ -385,6 +361,60 @@ func (s WorkspaceManager) createEnvVariableStatement(name string, value string) 
 		return fmt.Sprintf("set -x -g %s %s", name, value)
 	}
 	return ""
+}
+
+func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
+	_, err := os.Stat(s.getWorkspaceDir(name))
+	if os.IsNotExist(err) {
+		return Workspace{}, errors.New("the workspace does not exist")
+	}
+	app, err := s.GetConfig(name, "app")
+	if err != nil {
+		return Workspace{}, errors.New("the config file of the workspace is corrupted")
+	}
+	path, err := s.GetConfig(name, "path")
+	if err != nil {
+		return Workspace{}, errors.New("the config file of the workspace is corrupted")
+	}
+	if app != s.shell {
+		return Workspace{}, fmt.Errorf(`the "%s" app si not supported for this workspace, it works with "%s"`, app, s.shell)
+	}
+	content, err := os.ReadFile(s.resolveFunctionFile(name))
+	if os.IsNotExist(err) {
+		return Workspace{}, errors.New("the workspace does not exist")
+	}
+	if err != nil {
+		return Workspace{}, err
+	}
+	funcs, err := shell.Parse(s.shell, content)
+	if err != nil {
+		return Workspace{}, err
+	}
+	envs, err := s.listEnvs(name)
+	if err != nil {
+		return Workspace{}, err
+	}
+	commands := []Function{}
+	for _, f := range funcs {
+		commands = append(commands, Function{
+			Name:        f.Name,
+			Description: f.Description,
+		})
+	}
+	slices.SortFunc(commands, func(a, b Function) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+	return Workspace{
+		Name:      name,
+		Functions: commands,
+		Envs:      envs,
+		Config: map[string]string{
+			"path": path,
+			"app":  app,
+		},
+		workspaceDir: s.getWorkspaceDir(name),
+		functionFile: s.resolveFunctionFile(name),
+	}, nil
 }
 
 type command struct {

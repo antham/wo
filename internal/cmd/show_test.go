@@ -72,10 +72,10 @@ No envs defined
 								Name: "stop",
 							},
 						},
-						Envs: []string{
-							"default",
-							"dev",
-							"prod",
+						Envs: []workspace.Env{
+							{Name: "default"},
+							{Name: "dev"},
+							{Name: "prod"},
 						},
 					}, nil)
 				return w, args

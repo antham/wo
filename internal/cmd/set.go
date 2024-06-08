@@ -11,7 +11,7 @@ func newSetCmd(workspaceManager workspaceManager, completionManager completionMa
 		Args:              cobra.ExactArgs(3),
 		ValidArgsFunction: completionManager.Process,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return workspaceManager.SetConfig(args[0], args[1], args[2])
+			return workspaceManager.SetConfig(args[0], map[string]string{args[1]: args[2]})
 		},
 	}
 }

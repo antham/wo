@@ -58,8 +58,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 				assert.Equal(t, "/usr/bin/bash", w.shellBin)
 				assert.Equal(t, "bash", w.shell)
 				assert.DirExists(t, w.configDir)
-				assert.DirExists(t, w.getFunctionDir())
-				assert.DirExists(t, w.getEnvDir())
 			},
 		},
 		{
@@ -73,8 +71,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 				assert.Equal(t, "/bin/zsh", w.shellBin)
 				assert.Equal(t, "zsh", w.shell)
 				assert.DirExists(t, w.configDir)
-				assert.DirExists(t, w.getFunctionDir())
-				assert.DirExists(t, w.getEnvDir())
 			},
 		},
 	}
@@ -118,29 +114,9 @@ func TestList(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Len(t, ws, 3)
 				assert.Equal(t, []Workspace{
-					{Name: "api", Functions: []Function{}, Envs: []string{"default", "dev"}},
-					{Name: "db", Functions: []Function{}, Envs: []string{"default", "staging"}},
-					{Name: "front", Functions: []Function{}, Envs: []string{"default", "prod"}},
-				}, ws)
-			},
-		},
-		{
-			"Only get one entry if several are defined for several shells",
-			func(t *testing.T, w WorkspaceManager) {
-				assert.NoError(t, w.Create("api", getProjectPath(t)))
-				assert.NoError(t, w.CreateEnv("api", "dev"))
-				assert.NoError(t, w.Create("db", getProjectPath(t)))
-				assert.NoError(t, w.CreateEnv("db", "staging"))
-				assert.NoError(t, w.Create("front", getProjectPath(t)))
-				assert.NoError(t, w.CreateEnv("front", "prod"))
-			},
-			func(t *testing.T, ws []Workspace, err error) {
-				assert.NoError(t, err)
-				assert.Len(t, ws, 3)
-				assert.Equal(t, []Workspace{
-					{Name: "api", Functions: []Function{}, Envs: []string{"default", "dev"}},
-					{Name: "db", Functions: []Function{}, Envs: []string{"default", "staging"}},
-					{Name: "front", Functions: []Function{}, Envs: []string{"default", "prod"}},
+					{Name: "api", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/api/envs/default.bash", getConfigPath(t))}, {Name: "dev", file: fmt.Sprintf("%s/api/envs/dev.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/api", getConfigPath(t)), functionFile: fmt.Sprintf("%s/api/functions/functions.bash", getConfigPath(t))},
+					{Name: "db", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/db/envs/default.bash", getConfigPath(t))}, {Name: "staging", file: fmt.Sprintf("%s/db/envs/staging.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/db", getConfigPath(t)), functionFile: fmt.Sprintf("%s/db/functions/functions.bash", getConfigPath(t))},
+					{Name: "front", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t))}, {Name: "prod", file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/front", getConfigPath(t)), functionFile: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t))},
 				}, ws)
 			},
 		},
@@ -180,7 +156,7 @@ func TestGet(t *testing.T) {
 				err = w.CreateEnv("front", "prod")
 				assert.NoError(t, err)
 
-				functionPath := getConfigPath(t) + "/functions/front.bash"
+				functionPath := getConfigPath(t) + "/front/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 # A function 1
 test_func1() {
@@ -196,20 +172,36 @@ test_func2() {
 			func(t *testing.T, w Workspace, err error) {
 				assert.NoError(t, err)
 				assert.Len(t, w.Functions, 2)
-				assert.Equal(t, Workspace{
-					Name: "front",
-					Functions: []Function{
-						{
-							Name:        "test_func1",
-							Description: "A function 1",
+				assert.Equal(t,
+					Workspace{
+						Name: "front",
+						Functions: []Function{
+							{
+								Name:        "test_func1",
+								Description: "A function 1",
+							},
+							{
+								Name:        "test_func2",
+								Description: "A function 2",
+							},
 						},
-						{
-							Name:        "test_func2",
-							Description: "A function 2",
+						Envs: []Env{
+							{
+								Name: "default",
+								file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t)),
+							},
+							{
+								Name: "prod",
+								file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t)),
+							},
 						},
-					},
-					Envs: []string{"default", "prod"},
-				}, w)
+						Config: map[string]string{
+							"app":  "bash",
+							"path": getProjectPath(t),
+						},
+						workspaceDir: fmt.Sprintf("%s/front", getConfigPath(t)),
+						functionFile: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)),
+					}, w)
 			},
 		},
 	}
@@ -239,18 +231,18 @@ func TestCreate(t *testing.T) {
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
 				path := getConfigPath(t)
-				envFile, err := os.Stat(path + "/envs/test/default.bash")
+				envFile, err := os.Stat(path + "/test/envs/default.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", envFile.Name())
-				functionFile, err := os.Stat(path + "/functions/test.bash")
+				functionFile, err := os.Stat(path + "/test/functions/functions.bash")
 				assert.NoError(t, err)
-				assert.Equal(t, "test.bash", functionFile.Name())
-				configFile, err := os.Stat(path + "/configs/test.toml")
+				assert.Equal(t, "functions.bash", functionFile.Name())
+				configFile, err := os.Stat(path + "/test/config.toml")
 				assert.NoError(t, err)
-				assert.Equal(t, "test.toml", configFile.Name())
-				b, err := os.ReadFile(path + "/configs/test.toml")
+				assert.Equal(t, "config.toml", configFile.Name())
+				b, err := os.ReadFile(path + "/test/config.toml")
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("path = '%s'\n", getProjectPath(t)), string(b))
+				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", getProjectPath(t)), string(b))
 			},
 		},
 	}
@@ -280,15 +272,15 @@ func TestCreateEnv(t *testing.T) {
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
 				path := getConfigPath(t)
-				defaultEnvFile, err := os.Stat(path + "/envs/test/default.bash")
+				defaultEnvFile, err := os.Stat(path + "/test/envs/default.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", defaultEnvFile.Name())
-				prodEnvFile, err := os.Stat(path + "/envs/test/prod.bash")
+				prodEnvFile, err := os.Stat(path + "/test/envs/prod.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "prod.bash", prodEnvFile.Name())
-				functionFile, err := os.Stat(path + "/functions/test.bash")
+				functionFile, err := os.Stat(path + "/test/functions/functions.bash")
 				assert.NoError(t, err)
-				assert.Equal(t, "test.bash", functionFile.Name())
+				assert.Equal(t, "functions.bash", functionFile.Name())
 			},
 		},
 	}
@@ -315,12 +307,12 @@ func TestEdit(t *testing.T) {
 		{
 			"Edit workspace",
 			func(t *testing.T, w WorkspaceManager, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/functions/test.bash", getConfigPath(t))).Return(nil)
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/functions/functions.bash", getConfigPath(t))).Return(nil)
 				err := w.Create("test", getProjectPath(t))
 				assert.NoError(t, err)
 			},
 			func(t *testing.T) {
-				f, err := os.Stat(fmt.Sprintf("%s/envs/test/default.bash", getConfigPath(t)))
+				f, err := os.Stat(fmt.Sprintf("%s/test/envs/default.bash", getConfigPath(t)))
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", f.Name())
 			},
@@ -349,16 +341,16 @@ func TestEditEnv(t *testing.T) {
 	scenarios := []scenario{
 		{
 			"Edit default workspace",
-			"",
+			"default",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/envs/test/default.bash", getConfigPath(t))).Return(nil)
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/default.bash", getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Edit prod workspace",
 			"prod",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/envs/test/prod.bash", getConfigPath(t))).Return(nil)
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/prod.bash", getConfigPath(t))).Return(nil)
 			},
 		},
 	}
@@ -391,19 +383,32 @@ func TestRunFunction(t *testing.T) {
 		{
 			"Run a function with a bash shell",
 			[]string{"run-db"},
-			"",
+			"default",
 			"/bin/bash",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/envs/test/default.bash && source %s/functions/test.bash && run-db", getConfigPath(t), getConfigPath(t))).Return(nil)
+				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
+				assert.NoError(t, os.WriteFile(functionPath, []byte(`
+function run-db() {
+
+}
+`), 0o777))
+
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/test/envs/default.bash && source %s/test/functions/functions.bash && run-db", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
 			"Run a function with a fish shell",
 			[]string{"run-db"},
-			"",
+			"default",
 			"/bin/fish",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/envs/test/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db").Return(nil)
+				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
+				assert.NoError(t, os.WriteFile(functionPath, []byte(`
+function run-db {
+
+}
+`), 0o777))
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/test/envs/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db").Return(nil)
 			},
 		},
 		{
@@ -412,7 +417,14 @@ func TestRunFunction(t *testing.T) {
 			"prod",
 			"/bin/bash",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/envs/test/prod.bash && source %s/functions/test.bash && run-db watch", getConfigPath(t), getConfigPath(t))).Return(nil)
+				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
+				assert.NoError(t, os.WriteFile(functionPath, []byte(`
+function run-db() {
+
+}
+`), 0o777))
+
+				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/test/envs/prod.bash && source %s/test/functions/functions.bash && run-db watch", getConfigPath(t), getConfigPath(t))).Return(nil)
 			},
 		},
 		{
@@ -421,7 +433,13 @@ func TestRunFunction(t *testing.T) {
 			"prod",
 			"/bin/fish",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/envs/test/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/functions/test.fish", getConfigPath(t)), "-c", "run-db watch").Return(nil)
+				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
+				assert.NoError(t, os.WriteFile(functionPath, []byte(`
+function run-db {
+
+}
+`), 0o777))
+				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/test/envs/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db watch").Return(nil)
 			},
 		},
 	}
@@ -462,18 +480,18 @@ func TestRemove(t *testing.T) {
 			func(t *testing.T, e error) {
 				assert.NoError(t, e)
 				path := getConfigPath(t)
-				_, err := os.Stat(path + "/envs/test/prod.bash")
+				_, err := os.Stat(path + "/test/envs/prod.bash")
 				assert.True(t, os.IsNotExist(err))
-				_, err = os.Stat(path + "/envs/test/dev.bash")
+				_, err = os.Stat(path + "/test/envs/dev.bash")
 				assert.True(t, os.IsNotExist(err))
-				_, err = os.Stat(path + "/functions/test.bash")
+				_, err = os.Stat(path + "/test/functions/functions.bash")
 				assert.True(t, os.IsNotExist(err))
-				_, err = os.Stat(path + "/configs/test.toml")
+				_, err = os.Stat(path + "/test/config.toml")
 				assert.True(t, os.IsNotExist(err))
 
-				_, err = os.Stat(path + "/functions/front.bash")
+				_, err = os.Stat(path + "/front/functions/functions.bash")
 				assert.NoError(t, err)
-				_, err = os.Stat(path + "/envs/front/dev.bash")
+				_, err = os.Stat(path + "/front/envs/dev.bash")
 				assert.NoError(t, err)
 			},
 		},
@@ -514,9 +532,9 @@ func TestSetConfig(t *testing.T) {
 			"/home/user/project",
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
-				b, err := os.ReadFile(fmt.Sprintf("%s/%s", getConfigPath(t), "configs/test.toml"))
+				b, err := os.ReadFile(fmt.Sprintf("%s/%s", getConfigPath(t), "test/config.toml"))
 				assert.NoError(t, err)
-				assert.Equal(t, []byte("path = '/home/user/project'\n"), b)
+				assert.Equal(t, []byte("app = 'bash'\npath = '/home/user/project'\n"), b)
 			},
 		},
 		{
@@ -536,7 +554,7 @@ func TestSetConfig(t *testing.T) {
 			assert.NoError(t, err)
 			err = w.Create("test", getProjectPath(t))
 			assert.NoError(t, err)
-			s.test(t, w.SetConfig(s.workspace, s.key, s.value))
+			s.test(t, w.SetConfig(s.workspace, map[string]string{s.key: s.value}))
 		})
 	}
 }

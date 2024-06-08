@@ -61,8 +61,8 @@ func TestCompletionProcess(t *testing.T) {
 				w := newMockWorkspaceManager(t)
 				w.Mock.On("Get", "test").Return(
 					workspace.Workspace{
-						Envs: []string{
-							"a",
+						Envs: []workspace.Env{
+							{Name: "a"},
 						},
 					}, nil)
 				c := New(w, []Decorator{FindWorkspaces, FindEnvs})
@@ -163,18 +163,18 @@ func TestFindEnvs(t *testing.T) {
 				w := newMockWorkspaceManager(t)
 				w.Mock.On("Get", "test").Return(
 					workspace.Workspace{
-						Envs: []string{
-							"a",
-							"b",
-							"c",
-							"d",
-							"da",
-							"daa",
-							"dab",
-							"dac",
-							"db",
-							"dc",
-							"e",
+						Envs: []workspace.Env{
+							{Name: "a"},
+							{Name: "b"},
+							{Name: "c"},
+							{Name: "d"},
+							{Name: "da"},
+							{Name: "daa"},
+							{Name: "dab"},
+							{Name: "dac"},
+							{Name: "db"},
+							{Name: "dc"},
+							{Name: "e"},
 						},
 					}, nil)
 				return w, "da", []string{"test"}

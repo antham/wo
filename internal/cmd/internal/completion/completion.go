@@ -75,8 +75,8 @@ func FindEnvs(workspaceManager workspaceManager, toComplete string, args ...stri
 	}
 	envs := []string{}
 	for _, env := range w.Envs {
-		if strings.HasPrefix(env, toComplete) {
-			envs = append(envs, env)
+		if strings.HasPrefix(env.Name, toComplete) {
+			envs = append(envs, env.Name)
 		}
 	}
 	return envs, cobra.ShellCompDirectiveNoFileComp, nil
