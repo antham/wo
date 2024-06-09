@@ -552,12 +552,31 @@ func TestSetConfig(t *testing.T) {
 			"Set a value in a workspace config",
 			"test",
 			"path",
-			"/home/user/project",
+			"/tmp",
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
 				b, err := os.ReadFile(fmt.Sprintf("%s/%s", config.getPath(t), "test/config.toml"))
 				assert.NoError(t, err)
-				assert.Equal(t, []byte("app = 'bash'\npath = '/home/user/project'\n"), b)
+				assert.Equal(t, []byte("app = 'bash'\npath = '/tmp'\n"), b)
+			},
+		},
+		{
+			"Set an unsupported value",
+			"test",
+			"whetevr",
+			"/home/user/project",
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Set an unexisting path",
+			"test",
+			"path",
+			"/home/user/project",
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+				assert.EqualError(t, err, `path "/home/user/project" does not exist`)
 			},
 		},
 		{
@@ -619,9 +638,13 @@ func TestBuildAliases(t *testing.T) {
 			os.RemoveAll(config.getPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", fmt.Sprintf("%s/test", project.getPath(t)))
+			testProjectPath := fmt.Sprintf("%s/test", project.getPath(t))
+			assert.NoError(t, os.MkdirAll(testProjectPath, 0o777))
+			err = w.Create("test", testProjectPath)
 			assert.NoError(t, err)
-			err = w.Create("front", fmt.Sprintf("%s/front", project.getPath(t)))
+			frontProjectPath := fmt.Sprintf("%s/front", project.getPath(t))
+			assert.NoError(t, os.MkdirAll(frontProjectPath, 0o777))
+			err = w.Create("front", frontProjectPath)
 			assert.NoError(t, err)
 			aliases, err := w.BuildAliases(s.prefix)
 			s.test(t, aliases, err)

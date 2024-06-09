@@ -229,6 +229,15 @@ func (s WorkspaceManager) SetConfig(name string, kv map[string]string) error {
 		return err
 	}
 	for key, value := range kv {
+		if !slices.Contains([]string{"path", "app"}, key) {
+			return fmt.Errorf(`"%s" is not a valid config key`, key)
+		}
+		if key == "path" {
+			_, err := os.Stat(value)
+			if os.IsNotExist(err) {
+				return fmt.Errorf(`path "%s" does not exist`, value)
+			}
+		}
 		v.Set(key, value)
 	}
 	return v.WriteConfig()
