@@ -8,30 +8,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	configPath  string
-	projectPath string
-)
-
-func getConfigPath(t *testing.T) string {
-	if configPath == "" {
-		path, err := os.MkdirTemp("/tmp", "wo")
-		assert.NoError(t, err)
-		configPath = path
-	}
-	return configPath
+type config struct {
+	path string
 }
 
-func getProjectPath(t *testing.T) string {
-	if projectPath == "" {
+func (c *config) getPath(t *testing.T) string {
+	if c.path == "" {
+		path, err := os.MkdirTemp("/tmp", "wo")
+		assert.NoError(t, err)
+		c.path = path
+	}
+	return c.path
+}
+
+type project struct {
+	path string
+}
+
+func (p *project) getPath(t *testing.T) string {
+	if p.path == "" {
 		path, err := os.MkdirTemp("/tmp", "project")
 		assert.NoError(t, err)
-		projectPath = path
+		p.path = path
 	}
-	return projectPath
+	return p.path
 }
 
 func TestNewWorkspaceManager(t *testing.T) {
+	config := &config{}
 	type scenario struct {
 		name  string
 		setup func() (string, string, string)
@@ -76,15 +80,17 @@ func TestNewWorkspaceManager(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
+			os.RemoveAll(config.getPath(t))
 			visual, editor, shell := s.setup()
-			manager, err := NewWorkspaceManager(WithEditor(editor, visual), WithShellPath(shell), WithConfigPath(getConfigPath(t)))
+			manager, err := NewWorkspaceManager(WithEditor(editor, visual), WithShellPath(shell), WithConfigPath(config.getPath(t)))
 			s.test(t, manager, err)
 		})
 	}
 }
 
 func TestList(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		setup func(*testing.T, WorkspaceManager)
@@ -103,28 +109,28 @@ func TestList(t *testing.T) {
 		{
 			"Get all workspaces ordered alphabetically",
 			func(t *testing.T, w WorkspaceManager) {
-				assert.NoError(t, w.Create("api", getProjectPath(t)))
+				assert.NoError(t, w.Create("api", project.getPath(t)))
 				assert.NoError(t, w.CreateEnv("api", "dev"))
-				assert.NoError(t, w.Create("db", getProjectPath(t)))
+				assert.NoError(t, w.Create("db", project.getPath(t)))
 				assert.NoError(t, w.CreateEnv("db", "staging"))
-				assert.NoError(t, w.Create("front", getProjectPath(t)))
+				assert.NoError(t, w.Create("front", project.getPath(t)))
 				assert.NoError(t, w.CreateEnv("front", "prod"))
 			},
 			func(t *testing.T, ws []Workspace, err error) {
 				assert.NoError(t, err)
 				assert.Len(t, ws, 3)
 				assert.Equal(t, []Workspace{
-					{Name: "api", Functions: Functions{file: fmt.Sprintf("%s/api/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/api/envs/default.bash", getConfigPath(t))}, {Name: "dev", file: fmt.Sprintf("%s/api/envs/dev.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/api", getConfigPath(t))},
-					{Name: "db", Functions: Functions{file: fmt.Sprintf("%s/db/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/db/envs/default.bash", getConfigPath(t))}, {Name: "staging", file: fmt.Sprintf("%s/db/envs/staging.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/db", getConfigPath(t))},
-					{Name: "front", Functions: Functions{file: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t))}, {Name: "prod", file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/front", getConfigPath(t))},
+					{Name: "api", Functions: Functions{file: fmt.Sprintf("%s/api/functions/functions.bash", config.getPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/api/envs/default.bash", config.getPath(t))}, {Name: "dev", file: fmt.Sprintf("%s/api/envs/dev.bash", config.getPath(t))}}, Config: map[string]string{"app": "bash", "path": project.getPath(t)}, dir: fmt.Sprintf("%s/api", config.getPath(t))},
+					{Name: "db", Functions: Functions{file: fmt.Sprintf("%s/db/functions/functions.bash", config.getPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/db/envs/default.bash", config.getPath(t))}, {Name: "staging", file: fmt.Sprintf("%s/db/envs/staging.bash", config.getPath(t))}}, Config: map[string]string{"app": "bash", "path": project.getPath(t)}, dir: fmt.Sprintf("%s/db", config.getPath(t))},
+					{Name: "front", Functions: Functions{file: fmt.Sprintf("%s/front/functions/functions.bash", config.getPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/front/envs/default.bash", config.getPath(t))}, {Name: "prod", file: fmt.Sprintf("%s/front/envs/prod.bash", config.getPath(t))}}, Config: map[string]string{"app": "bash", "path": project.getPath(t)}, dir: fmt.Sprintf("%s/front", config.getPath(t))},
 				}, ws)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
 			workspaces, err := w.List()
@@ -134,6 +140,8 @@ func TestList(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		setup func(*testing.T, WorkspaceManager)
@@ -151,12 +159,12 @@ func TestGet(t *testing.T) {
 		{
 			"Get all workspace",
 			func(t *testing.T, w WorkspaceManager) {
-				err := w.Create("front", getProjectPath(t))
+				err := w.Create("front", project.getPath(t))
 				assert.NoError(t, err)
 				err = w.CreateEnv("front", "prod")
 				assert.NoError(t, err)
 
-				functionPath := getConfigPath(t) + "/front/functions/functions.bash"
+				functionPath := config.getPath(t) + "/front/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 # A function 1
 test_func1() {
@@ -176,7 +184,7 @@ test_func2() {
 					Workspace{
 						Name: "front",
 						Functions: Functions{
-							file: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)),
+							file: fmt.Sprintf("%s/front/functions/functions.bash", config.getPath(t)),
 							Functions: []Function{
 								{
 									Name:        "test_func1",
@@ -191,26 +199,26 @@ test_func2() {
 						Envs: []Env{
 							{
 								Name: "default",
-								file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t)),
+								file: fmt.Sprintf("%s/front/envs/default.bash", config.getPath(t)),
 							},
 							{
 								Name: "prod",
-								file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t)),
+								file: fmt.Sprintf("%s/front/envs/prod.bash", config.getPath(t)),
 							},
 						},
 						Config: map[string]string{
 							"app":  "bash",
-							"path": getProjectPath(t),
+							"path": project.getPath(t),
 						},
-						dir: fmt.Sprintf("%s/front", getConfigPath(t)),
+						dir: fmt.Sprintf("%s/front", config.getPath(t)),
 					}, w)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
 			workspace, err := w.Get("front")
@@ -220,6 +228,8 @@ test_func2() {
 }
 
 func TestCreate(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		setup func(*testing.T, WorkspaceManager)
@@ -232,7 +242,7 @@ func TestCreate(t *testing.T) {
 			},
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
-				path := getConfigPath(t)
+				path := config.getPath(t)
 				envFile, err := os.Stat(path + "/test/envs/default.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", envFile.Name())
@@ -244,23 +254,25 @@ func TestCreate(t *testing.T) {
 				assert.Equal(t, "config.toml", configFile.Name())
 				b, err := os.ReadFile(path + "/test/config.toml")
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", getProjectPath(t)), string(b))
+				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", project.getPath(t)), string(b))
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
 			assert.NoError(t, err)
-			s.test(t, w.Create("test", getProjectPath(t)))
+			s.test(t, w.Create("test", project.getPath(t)))
 		})
 	}
 }
 
 func TestCreateEnv(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		setup func(*testing.T, WorkspaceManager)
@@ -273,7 +285,7 @@ func TestCreateEnv(t *testing.T) {
 			},
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
-				path := getConfigPath(t)
+				path := config.getPath(t)
 				defaultEnvFile, err := os.Stat(path + "/test/envs/default.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", defaultEnvFile.Name())
@@ -288,18 +300,20 @@ func TestCreateEnv(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
 			assert.NoError(t, err)
-			assert.NoError(t, w.Create("test", getProjectPath(t)))
+			assert.NoError(t, w.Create("test", project.getPath(t)))
 			s.test(t, w.CreateEnv("test", "prod"))
 		})
 	}
 }
 
 func TestEdit(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		setup func(*testing.T, WorkspaceManager, *MockCommander)
@@ -309,12 +323,12 @@ func TestEdit(t *testing.T) {
 		{
 			"Edit workspace",
 			func(t *testing.T, w WorkspaceManager, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/functions/functions.bash", getConfigPath(t))).Return(nil)
-				err := w.Create("test", getProjectPath(t))
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/functions/functions.bash", config.getPath(t))).Return(nil)
+				err := w.Create("test", project.getPath(t))
 				assert.NoError(t, err)
 			},
 			func(t *testing.T) {
-				f, err := os.Stat(fmt.Sprintf("%s/test/envs/default.bash", getConfigPath(t)))
+				f, err := os.Stat(fmt.Sprintf("%s/test/envs/default.bash", config.getPath(t)))
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", f.Name())
 			},
@@ -322,8 +336,8 @@ func TestEdit(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			exec := NewMockCommander(t)
 			w.exec = exec
@@ -335,6 +349,8 @@ func TestEdit(t *testing.T) {
 }
 
 func TestEditEnv(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name  string
 		env   string
@@ -345,23 +361,23 @@ func TestEditEnv(t *testing.T) {
 			"Edit default workspace",
 			"default",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/default.bash", getConfigPath(t))).Return(nil)
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/default.bash", config.getPath(t))).Return(nil)
 			},
 		},
 		{
 			"Edit prod workspace",
 			"prod",
 			func(t *testing.T, exec *MockCommander) {
-				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/prod.bash", getConfigPath(t))).Return(nil)
+				exec.On("command", "", "-c", fmt.Sprintf("emacs %s/test/envs/prod.bash", config.getPath(t))).Return(nil)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", getProjectPath(t))
+			err = w.Create("test", project.getPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
@@ -374,6 +390,8 @@ func TestEditEnv(t *testing.T) {
 }
 
 func TestRunFunction(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name            string
 		functionAndArgs []string
@@ -388,14 +406,14 @@ func TestRunFunction(t *testing.T) {
 			"default",
 			"/bin/bash",
 			func(t *testing.T, exec *MockCommander) {
-				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
+				functionPath := config.getPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 run-db() {
 
 }
 `), 0o777))
 
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/test/envs/default.bash && source %s/test/functions/functions.bash && run-db", getConfigPath(t), getConfigPath(t))).Return(nil)
+				exec.On("command", project.getPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=default && source %s/test/envs/default.bash && source %s/test/functions/functions.bash && run-db", config.getPath(t), config.getPath(t))).Return(nil)
 			},
 		},
 		{
@@ -404,13 +422,13 @@ run-db() {
 			"default",
 			"/bin/fish",
 			func(t *testing.T, exec *MockCommander) {
-				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
+				functionPath := config.getPath(t) + "/test/functions/functions.fish"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 function run-db
 
 end
 `), 0o777))
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/test/envs/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db").Return(nil)
+				exec.On("command", project.getPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/test/envs/default.fish", config.getPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", config.getPath(t)), "-c", "run-db").Return(nil)
 			},
 		},
 		{
@@ -419,14 +437,14 @@ end
 			"prod",
 			"/bin/bash",
 			func(t *testing.T, exec *MockCommander) {
-				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
+				functionPath := config.getPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 run-db() {
 
 }
 `), 0o777))
 
-				exec.On("command", getProjectPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/test/envs/prod.bash && source %s/test/functions/functions.bash && run-db watch", getConfigPath(t), getConfigPath(t))).Return(nil)
+				exec.On("command", project.getPath(t), "-c", fmt.Sprintf("export WO_NAME=test && export WO_ENV=prod && source %s/test/envs/prod.bash && source %s/test/functions/functions.bash && run-db watch", config.getPath(t), config.getPath(t))).Return(nil)
 			},
 		},
 		{
@@ -435,21 +453,21 @@ run-db() {
 			"prod",
 			"/bin/fish",
 			func(t *testing.T, exec *MockCommander) {
-				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
+				functionPath := config.getPath(t) + "/test/functions/functions.fish"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
 function run-db
 end
 `), 0o777))
-				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/test/envs/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db watch").Return(nil)
+				exec.On("command", project.getPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/test/envs/prod.fish", config.getPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", config.getPath(t)), "-c", "run-db watch").Return(nil)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", getProjectPath(t))
+			err = w.Create("test", project.getPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
@@ -462,6 +480,8 @@ end
 }
 
 func TestRemove(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name      string
 		workspace string
@@ -480,7 +500,7 @@ func TestRemove(t *testing.T) {
 			"test",
 			func(t *testing.T, e error) {
 				assert.NoError(t, e)
-				path := getConfigPath(t)
+				path := config.getPath(t)
 				_, err := os.Stat(path + "/test/envs/prod.bash")
 				assert.True(t, os.IsNotExist(err))
 				_, err = os.Stat(path + "/test/envs/dev.bash")
@@ -499,16 +519,16 @@ func TestRemove(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", getProjectPath(t))
+			err = w.Create("test", project.getPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "prod")
 			assert.NoError(t, err)
 			err = w.CreateEnv("test", "dev")
 			assert.NoError(t, err)
-			err = w.Create("front", getProjectPath(t))
+			err = w.Create("front", project.getPath(t))
 			assert.NoError(t, err)
 			err = w.CreateEnv("front", "dev")
 			assert.NoError(t, err)
@@ -518,6 +538,8 @@ func TestRemove(t *testing.T) {
 }
 
 func TestSetConfig(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name      string
 		workspace string
@@ -533,7 +555,7 @@ func TestSetConfig(t *testing.T) {
 			"/home/user/project",
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
-				b, err := os.ReadFile(fmt.Sprintf("%s/%s", getConfigPath(t), "test/config.toml"))
+				b, err := os.ReadFile(fmt.Sprintf("%s/%s", config.getPath(t), "test/config.toml"))
 				assert.NoError(t, err)
 				assert.Equal(t, []byte("app = 'bash'\npath = '/home/user/project'\n"), b)
 			},
@@ -550,10 +572,10 @@ func TestSetConfig(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", getProjectPath(t))
+			err = w.Create("test", project.getPath(t))
 			assert.NoError(t, err)
 			s.test(t, w.SetConfig(s.workspace, map[string]string{s.key: s.value}))
 		})
@@ -561,6 +583,8 @@ func TestSetConfig(t *testing.T) {
 }
 
 func TestBuildAliases(t *testing.T) {
+	config := &config{}
+	project := &project{}
 	type scenario struct {
 		name   string
 		prefix string
@@ -573,8 +597,8 @@ func TestBuildAliases(t *testing.T) {
 			func(t *testing.T, aliases []string, e error) {
 				assert.NoError(t, e)
 				assert.Equal(t, []string{
-					fmt.Sprintf(`alias c_front="cd %s/front"`, getProjectPath(t)),
-					fmt.Sprintf(`alias c_test="cd %s/test"`, getProjectPath(t)),
+					fmt.Sprintf(`alias c_front="cd %s/front"`, project.getPath(t)),
+					fmt.Sprintf(`alias c_test="cd %s/test"`, project.getPath(t)),
 				}, aliases)
 			},
 		},
@@ -584,20 +608,20 @@ func TestBuildAliases(t *testing.T) {
 			func(t *testing.T, aliases []string, e error) {
 				assert.NoError(t, e)
 				assert.Equal(t, []string{
-					fmt.Sprintf(`alias xxfront="cd %s/front"`, getProjectPath(t)),
-					fmt.Sprintf(`alias xxtest="cd %s/test"`, getProjectPath(t)),
+					fmt.Sprintf(`alias xxfront="cd %s/front"`, project.getPath(t)),
+					fmt.Sprintf(`alias xxtest="cd %s/test"`, project.getPath(t)),
 				}, aliases)
 			},
 		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(getConfigPath(t))
-			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(getConfigPath(t)))
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("test", fmt.Sprintf("%s/test", getProjectPath(t)))
+			err = w.Create("test", fmt.Sprintf("%s/test", project.getPath(t)))
 			assert.NoError(t, err)
-			err = w.Create("front", fmt.Sprintf("%s/front", getProjectPath(t)))
+			err = w.Create("front", fmt.Sprintf("%s/front", project.getPath(t)))
 			assert.NoError(t, err)
 			aliases, err := w.BuildAliases(s.prefix)
 			s.test(t, aliases, err)
