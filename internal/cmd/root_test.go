@@ -56,6 +56,7 @@ func TestNewWorkspaceManager(t *testing.T) {
 			func(t *testing.T) {
 				os.Setenv("VISUAL", "emacs")
 				os.Setenv("SHELL", "/bin/bash")
+				os.Unsetenv("WO_CONFIG_PATH")
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.NoError(t, err)
