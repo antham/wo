@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"log"
 	"log/slog"
 	"os"
@@ -78,20 +79,24 @@ func newRootCmd() *cobra.Command {
 }
 
 func newWorkspaceManager() (workspaceManager, error) {
-	viper.AutomaticEnv()
+	editor, hasEditor := os.LookupEnv("EDITOR")
+	visual, hasVisual := os.LookupEnv("VISUAL")
+	shell, hasShell := os.LookupEnv("SHELL")
+	configPath, hasConfigPath := os.LookupEnv("WO_CONFIG_PATH")
+	if !hasEditor && !hasVisual {
+		return nil, errors.New("missing EDITOR or VISUAL environment variable")
+	}
+	if !hasShell {
+		return nil, errors.New("missing SHELL environment variable")
+	}
 	options := []func(*workspace.WorkspaceManager){
-		workspace.WithEditor(viper.GetString("EDITOR"), viper.GetString("VISUAL")),
-		workspace.WithShellPath(viper.GetString("SHELL")),
+		workspace.WithEditor(editor, visual),
+		workspace.WithShellPath(shell),
 	}
-	viper.SetEnvPrefix("WO")
-	if viper.IsSet("CONFIG_PATH") {
-		options = append(options, workspace.WithConfigPath(viper.GetString("CONFIG_PATH")))
+	if hasConfigPath {
+		options = append(options, workspace.WithConfigPath(configPath))
 	}
-	wksManager, err := workspace.NewWorkspaceManager(options...)
-	if err != nil {
-		return nil, err
-	}
-	return wksManager, nil
+	return workspace.NewWorkspaceManager(options...)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
