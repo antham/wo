@@ -390,7 +390,7 @@ func TestRunFunction(t *testing.T) {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db() {
+function run-db {
 
 }
 `), 0o777))
@@ -421,7 +421,7 @@ function run-db {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db() {
+function run-db {
 
 }
 `), 0o777))

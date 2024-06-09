@@ -1,66 +1,36 @@
 package shell
 
 import (
-	"github.com/bzick/tokenizer"
+	"regexp"
+	"strings"
 )
 
 type bashParser struct {
-	tokenizer *tokenizer.Tokenizer
 }
 
 func newBashParser() *bashParser {
-	bashParser := &bashParser{}
-	bashParser.tokenizer = tokenizer.New()
-	bashParser.tokenizer.
-		DefineTokens(tokenCurlyOpen, []string{"{"}).
-		DefineTokens(tokenCurlyClose, []string{"}"}).
-		DefineTokens(tokenParenOpen, []string{"("}).
-		DefineTokens(tokenParenClose, []string{")"}).
-		DefineTokens(tokenFunction, []string{"function"}).
-		DefineTokens(tokenComment, []string{"#"})
-	return bashParser
+	return &bashParser{}
 }
 
 func (bashParser *bashParser) parse(content []byte) ([]Function, error) {
-	return bashParser.analyzer(bashParser.tokenizer.ParseBytes(content))
-}
-
-func (bashParser *bashParser) analyzer(stream *tokenizer.Stream) ([]Function, error) {
 	functions := []Function{}
-	comments := map[int][]*tokenizer.Token{}
-	for {
-		if stream.CurrentToken() == nil || stream.CurrentToken().Key() == 0 {
-			break
-		}
-		if stream.CurrentToken().Key() == tokenComment {
-			currentToken := stream.CurrentToken()
-			stream.GoNext()
-			for {
-				if stream.CurrentToken().Line() != currentToken.Line() {
-					break
+	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:function\s+?(?P<function_1>.+)|(?P<function_2>.*)\s*\(\))(?:\s*|\n)?{`)
+	for _, match := range r.FindAllSubmatch(content, -1) {
+		function := Function{}
+		for i, name := range r.SubexpNames() {
+			if i != 0 && name != "" {
+				switch name {
+				case "function_1", "function_2":
+					if len(match[i]) == 0 {
+						continue
+					}
+					function.Name = strings.TrimSpace(string(match[i]))
+				case "description":
+					function.Description = strings.TrimSpace(string(match[i]))
 				}
-				comments[stream.CurrentToken().Line()] = append(comments[stream.CurrentToken().Line()], stream.CurrentToken())
-				stream.GoNext()
 			}
 		}
-		if stream.IsNextSequence(tokenParenOpen, tokenParenClose) {
-			currentToken := stream.CurrentToken()
-			acc := ""
-			for {
-				if stream.CurrentToken().Line() != currentToken.Line() ||
-					// We check if the function keyword is at the beginning of the line
-					// and if the next token after the word function is directly attached to
-					// the word or if there is a space
-					(stream.CurrentToken().Key() == tokenFunction && stream.CurrentToken().Offset()+len(stream.CurrentToken().ValueString()) != stream.NextToken().Offset() && stream.CurrentToken().Line() != stream.PrevToken().Line()) {
-					break
-				}
-				acc = stream.CurrentToken().ValueString() + acc
-				stream.GoPrev()
-			}
-			stream.GoTo(currentToken.ID())
-			functions = append(functions, Function{Name: acc, Description: createDescription(comments[stream.CurrentToken().Line()-1])})
-		}
-		stream.GoNext()
+		functions = append(functions, function)
 	}
 	return functions, nil
 }

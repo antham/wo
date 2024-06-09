@@ -9,11 +9,11 @@ import (
 func TestParse(t *testing.T) {
 	fs, err := Parse("bash", []byte(`
 # This is a function to run
-function f1() {
+function f1 {
 	echo e;
 }
 
-function function_test() {
+function function_test {
 	echo e;
 }
 `))
@@ -25,11 +25,11 @@ function function_test() {
 	})
 	fs, err = Parse("sh", []byte(`
 # This is a function to run
-function f1() {
+function f1 {
 	echo e;
 }
 
-function function_test() {
+function function_test {
 	echo e;
 }
 `))
