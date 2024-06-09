@@ -26,8 +26,8 @@ echo "Workspace api
 ---
 Configuration
 
-* path : /root/api
 * app : $APP
+* path : /root/api
 
 ---
 Functions

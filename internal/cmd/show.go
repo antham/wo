@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -46,6 +47,7 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 					),
 				)
 			}
+			sort.Strings(configs)
 			functionTitle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
 				Render("Functions")
