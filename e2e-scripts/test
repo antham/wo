@@ -19,15 +19,7 @@ diff /tmp/expected-workspaces /tmp/actual-workspaces || exit 1
 
 # Show functions in a workspace
 
-echo '
-# Hello world function
-hello() {
-  echo "Hello world !"
-}
-' > ~/.config/wo/api/functions/functions.bash
-cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.sh
-cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.fish
-cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.zsh
+create_function
 
 echo "Workspace api
 
