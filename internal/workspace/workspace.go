@@ -386,10 +386,7 @@ func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	funcs, err := shell.Parse(s.shell, content)
-	if err != nil {
-		return Workspace{}, err
-	}
+	funcs := shell.Parse(s.shell, content)
 	envs, err := s.listEnvs(name)
 	if err != nil {
 		return Workspace{}, err

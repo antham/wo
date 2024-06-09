@@ -5,16 +5,15 @@ import (
 	"strings"
 )
 
-type bashParser struct {
+type shellParser struct{}
+
+func newShellParser() *shellParser {
+	return &shellParser{}
 }
 
-func newBashParser() *bashParser {
-	return &bashParser{}
-}
-
-func (bashParser *bashParser) parse(content []byte) ([]Function, error) {
+func (shellParser *shellParser) parse(content []byte) []Function {
 	functions := []Function{}
-	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:function\s+?(?P<function_1>.+)|(?P<function_2>.*)\s*\(\))(?:\s*|\n)?{`)
+	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:(?P<function_2>.*)\s*\(\))(?:\s*|\n)?{`)
 	for _, match := range r.FindAllSubmatch(content, -1) {
 		function := Function{}
 		for i, name := range r.SubexpNames() {
@@ -32,5 +31,5 @@ func (bashParser *bashParser) parse(content []byte) ([]Function, error) {
 		}
 		functions = append(functions, function)
 	}
-	return functions, nil
+	return functions
 }

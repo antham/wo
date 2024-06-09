@@ -390,7 +390,7 @@ func TestRunFunction(t *testing.T) {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db {
+run-db() {
 
 }
 `), 0o777))
@@ -406,9 +406,9 @@ function run-db {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db {
+function run-db
 
-}
+end
 `), 0o777))
 				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV default", "-C", fmt.Sprintf("source %s/test/envs/default.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db").Return(nil)
 			},
@@ -421,7 +421,7 @@ function run-db {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.bash"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db {
+run-db() {
 
 }
 `), 0o777))
@@ -437,9 +437,8 @@ function run-db {
 			func(t *testing.T, exec *MockCommander) {
 				functionPath := getConfigPath(t) + "/test/functions/functions.fish"
 				assert.NoError(t, os.WriteFile(functionPath, []byte(`
-function run-db {
-
-}
+function run-db
+end
 `), 0o777))
 				exec.On("command", getProjectPath(t), "-C", "set -x -g WO_NAME test", "-C", "set -x -g WO_ENV prod", "-C", fmt.Sprintf("source %s/test/envs/prod.fish", getConfigPath(t)), "-C", fmt.Sprintf("source %s/test/functions/functions.fish", getConfigPath(t)), "-c", "run-db watch").Return(nil)
 			},

@@ -8,7 +8,7 @@ import (
 
 func TestFishParser(t *testing.T) {
 	fishParser := newFishParser()
-	data, err := fishParser.parse([]byte(`
+	functions := fishParser.parse([]byte(`
 function f1 -d "f1 description comment"
 	echo e
 end
@@ -29,8 +29,6 @@ function f6;echo e; end
 
 function f7 -d "function to do something";echo e; end
 `))
-	functions := data
-	assert.NoError(t, err)
 	assert.Len(t, functions, 7)
 	assert.Equal(t, []Function{
 		{Name: "f1", Description: "f1 description comment"},
