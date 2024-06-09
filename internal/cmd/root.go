@@ -18,6 +18,9 @@ func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "wo",
 		Short: "Manage workspaces in shell",
+		CompletionOptions: cobra.CompletionOptions{
+			DisableDefaultCmd: true,
+		},
 	}
 	rootCmd.SetOut(os.Stdout)
 
@@ -64,10 +67,10 @@ func newRootCmd() *cobra.Command {
 	envCmd := newEnvCmd()
 	envCmd.AddCommand(newCreateEnvCmd(w, wksCompMgr))
 	envCmd.AddCommand(newEditEnvCmd(w, envCompMgr))
-
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(envCmd)
-	rootCmd.AddCommand(newAliasCmd(w))
+	rootCmd.AddCommand(newSetupCmd(w))
+	//	rootCmd.AddCommand(newAliasCmd(w))
 	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
