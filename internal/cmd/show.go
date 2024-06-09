@@ -25,6 +25,27 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 			title := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
 				Render(fmt.Sprintf("Workspace %s", wo.Name))
+			configTitle := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFCC70")).
+				Render("Configuration")
+			var configs []string
+			for key, value := range wo.Config {
+				configs = append(
+					configs,
+					fmt.Sprintf(
+						"%s %s%s",
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#8ECDDD")).
+							Render("*"),
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#FFFADD")).
+							Render(key),
+						lipgloss.NewStyle().
+							Foreground(lipgloss.Color("#8ECDDD")).
+							Render(fmt.Sprintf(" : %s", value)),
+					),
+				)
+			}
 			functionTitle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FFCC70")).
 				Render("Functions")
@@ -70,14 +91,23 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 					Render("No envs defined"))
 			}
 			cmd.Println(title)
+			cmd.Println()
+			cmd.Println(separator)
+			cmd.Println(configTitle)
+			cmd.Println()
+			cmd.Println(strings.Join(configs, "\n"))
+			cmd.Println()
 			cmd.Println(separator)
 			cmd.Println(functionTitle)
 			cmd.Println()
 			cmd.Println(strings.Join(functions, "\n"))
+			cmd.Println()
 			cmd.Println(separator)
 			cmd.Println(envTitle)
 			cmd.Println()
 			cmd.Println(strings.Join(envs, "\n"))
+			cmd.Println()
+			cmd.Println(separator)
 			return nil
 		},
 	}

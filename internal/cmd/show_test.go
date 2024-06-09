@@ -34,20 +34,37 @@ func TestNewShowCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				w := newMockWorkspaceManager(t)
 				args := []string{"api"}
-				w.Mock.On("Get", args[0]).Return(workspace.Workspace{Name: args[0]}, nil)
+				w.Mock.On("Get", args[0]).Return(
+					workspace.Workspace{
+						Name: args[0],
+						Config: map[string]string{
+							"app":  "fish",
+							"path": "/tmp",
+						},
+					}, nil)
 				return w, args
 			},
 			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, outBuf.String(), `Workspace api
+
+---
+Configuration
+
+* app : fish
+* path : /tmp
+
 ---
 Functions
 
 No functions defined
+
 ---
 Envs
 
 No envs defined
+
+---
 `)
 			},
 		},
@@ -59,6 +76,10 @@ No envs defined
 				w.Mock.On("Get", args[0]).Return(
 					workspace.Workspace{
 						Name: args[0],
+						Config: map[string]string{
+							"app":  "fish",
+							"path": "/tmp",
+						},
 						Functions: workspace.Functions{
 							Functions: []workspace.Function{
 								{
@@ -85,18 +106,28 @@ No envs defined
 			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, outBuf.String(), `Workspace api
+
+---
+Configuration
+
+* app : fish
+* path : /tmp
+
 ---
 Functions
 
 * start : Start a server
 * db-run : Start a db
 * stop
+
 ---
 Envs
 
 * default
 * dev
 * prod
+
+---
 `)
 			},
 		},

@@ -58,6 +58,7 @@ func TestNewListCmd(t *testing.T) {
 			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, outBuf.String(), `Workspaces
+
 ---
 * api
 * db

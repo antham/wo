@@ -7,6 +7,7 @@ wo create db ~/db || exit 1
 
 # List workspaces
 echo "Workspaces
+
 ---
 * api
 * db
@@ -29,14 +30,24 @@ cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/function
 cp ~/.config/wo/api/functions/functions.bash ~/.config/wo/api/functions/functions.zsh
 
 echo "Workspace api
+
+---
+Configuration
+
+* path : /root/api
+* app : $APP
+
 ---
 Functions
 
 * hello : Hello world function
+
 ---
 Envs
 
-* default" > /tmp/expected-api-workspace
+* default
+
+---" > /tmp/expected-api-workspace
 
 wo show api > /tmp/actual-api-workspace || exit 1
 
@@ -71,6 +82,7 @@ wo show api &> /tmp/actual-show-error
 diff /tmp/expected-show-error /tmp/actual-show-error || exit 1
 
 echo "Workspaces
+
 ---
 * db
 * front" > /tmp/expected-workspaces

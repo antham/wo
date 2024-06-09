@@ -35,6 +35,7 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 					Render(fmt.Sprintf("* %s", w.Name)))
 			}
 			cmd.Println(title)
+			cmd.Println()
 			cmd.Println(separator)
 			cmd.Println(strings.Join(list, "\n"))
 			return nil
