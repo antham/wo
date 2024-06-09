@@ -1,9 +1,9 @@
 mkdir -p ~/api ~/front ~/db
 
 # Create workspaces
-wo create api ~/api
-wo create front ~/front
-wo create db ~/db
+wo create api ~/api || exit 1
+wo create front ~/front || exit 1
+wo create db ~/db || exit 1
 
 # List workspaces
 echo "Workspaces
@@ -12,9 +12,9 @@ echo "Workspaces
 * db
 * front" > /tmp/expected-workspaces
 
-wo list > /tmp/actual-workspaces
+wo list > /tmp/actual-workspaces || exit 1
 
-diff /tmp/expected-workspaces /tmp/actual-workspaces
+diff /tmp/expected-workspaces /tmp/actual-workspaces || exit 1
 
 # Show functions in a workspace
 
@@ -38,25 +38,25 @@ Envs
 
 * default" > /tmp/expected-api-workspace
 
-wo show api > /tmp/actual-api-workspace
+wo show api > /tmp/actual-api-workspace || exit 1
 
-diff /tmp/expected-api-workspace /tmp/actual-api-workspace
+diff /tmp/expected-api-workspace /tmp/actual-api-workspace || exit 1
 
 # Run a function in a workspace
 
-test "$(wo r api hello)" = "Hello world !"
+test "$(wo r api hello)" = "Hello world !" || exit 1
 
 # Use aliases
 
-wo alias>/tmp/alias
+wo alias>/tmp/alias || exit 1
 source /tmp/alias
 
 c_api
-test "$PWD" = "$HOME/api"
+test "$PWD" = "$HOME/api" || exit 1
 
 # Remove a workspace
 
-wo remove api
+wo remove api || exit 1
 
 echo "Error: the workspace does not exist
 Usage:
@@ -68,7 +68,7 @@ Flags:
 
 wo show api &> /tmp/actual-show-error
 
-diff /tmp/expected-show-error /tmp/actual-show-error
+diff /tmp/expected-show-error /tmp/actual-show-error || exit 1
 
 echo "Workspaces
 ---
@@ -77,4 +77,4 @@ echo "Workspaces
 
 wo list > /tmp/actual-workspaces
 
-diff /tmp/expected-workspaces /tmp/actual-workspaces
+diff /tmp/expected-workspaces /tmp/actual-workspaces || exit 1
