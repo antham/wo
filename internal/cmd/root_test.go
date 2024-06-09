@@ -41,11 +41,11 @@ func TestNewWorkspaceManager(t *testing.T) {
 			func(t *testing.T) {
 				os.Setenv("VISUAL", "emacs")
 				os.Setenv("SHELL", "/bin/bash")
-				os.Setenv("CONFIG_PATH", os.TempDir())
+				os.Setenv("WO_CONFIG_PATH", os.TempDir())
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.NoError(t, err)
-				path := os.Getenv("CONFIG_PATH")
+				path := os.Getenv("WO_CONFIG_PATH")
 				fileInfo, err := os.Stat(path)
 				assert.NoError(t, err)
 				assert.True(t, fileInfo.IsDir())
