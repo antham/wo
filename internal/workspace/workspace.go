@@ -31,12 +31,16 @@ const (
 )
 
 type Workspace struct {
-	Name         string
-	Functions    []Function
-	Envs         []Env
-	Config       map[string]string
-	workspaceDir string
-	functionFile string
+	Name      string
+	Functions Functions
+	Envs      []Env
+	Config    map[string]string
+	dir       string
+}
+
+type Functions struct {
+	file      string
+	Functions []Function
 }
 
 type Function struct {
@@ -175,7 +179,7 @@ func (s WorkspaceManager) Edit(name string) error {
 	if err != nil {
 		return err
 	}
-	return s.editFile(w.functionFile)
+	return s.editFile(w.Functions.file)
 }
 
 func (s WorkspaceManager) EditEnv(name string, env string) error {
@@ -202,7 +206,7 @@ func (s WorkspaceManager) RunFunction(name string, env string, functionAndArgs [
 	}) {
 		return fmt.Errorf("the env `%s` does not exist", env)
 	}
-	if !slices.ContainsFunc(w.Functions, func(f Function) bool {
+	if !slices.ContainsFunc(w.Functions.Functions, func(f Function) bool {
 		return f.Name == functionAndArgs[0]
 	}) {
 		return fmt.Errorf("the function `%s` does not exist", functionAndArgs[0])
@@ -215,7 +219,7 @@ func (s WorkspaceManager) Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	return os.RemoveAll(w.workspaceDir)
+	return os.RemoveAll(w.dir)
 }
 
 func (s WorkspaceManager) SetConfig(name string, kv map[string]string) error {
@@ -390,26 +394,30 @@ func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	commands := []Function{}
+	functions := []Function{}
 	for _, f := range funcs {
-		commands = append(commands, Function{
-			Name:        f.Name,
-			Description: f.Description,
-		})
+		functions = append(
+			functions, Function{
+				Name:        f.Name,
+				Description: f.Description,
+			},
+		)
 	}
-	slices.SortFunc(commands, func(a, b Function) int {
+	slices.SortFunc(functions, func(a, b Function) int {
 		return cmp.Compare(a.Name, b.Name)
 	})
 	return Workspace{
-		Name:      name,
-		Functions: commands,
-		Envs:      envs,
+		Name: name,
+		Functions: Functions{
+			file:      s.resolveFunctionFile(name),
+			Functions: functions,
+		},
+		Envs: envs,
 		Config: map[string]string{
 			"path": path,
 			"app":  app,
 		},
-		workspaceDir: s.getWorkspaceDir(name),
-		functionFile: s.resolveFunctionFile(name),
+		dir: s.getWorkspaceDir(name),
 	}, nil
 }
 

@@ -114,9 +114,9 @@ func TestList(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Len(t, ws, 3)
 				assert.Equal(t, []Workspace{
-					{Name: "api", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/api/envs/default.bash", getConfigPath(t))}, {Name: "dev", file: fmt.Sprintf("%s/api/envs/dev.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/api", getConfigPath(t)), functionFile: fmt.Sprintf("%s/api/functions/functions.bash", getConfigPath(t))},
-					{Name: "db", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/db/envs/default.bash", getConfigPath(t))}, {Name: "staging", file: fmt.Sprintf("%s/db/envs/staging.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/db", getConfigPath(t)), functionFile: fmt.Sprintf("%s/db/functions/functions.bash", getConfigPath(t))},
-					{Name: "front", Functions: []Function{}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t))}, {Name: "prod", file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, workspaceDir: fmt.Sprintf("%s/front", getConfigPath(t)), functionFile: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t))},
+					{Name: "api", Functions: Functions{file: fmt.Sprintf("%s/api/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/api/envs/default.bash", getConfigPath(t))}, {Name: "dev", file: fmt.Sprintf("%s/api/envs/dev.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/api", getConfigPath(t))},
+					{Name: "db", Functions: Functions{file: fmt.Sprintf("%s/db/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/db/envs/default.bash", getConfigPath(t))}, {Name: "staging", file: fmt.Sprintf("%s/db/envs/staging.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/db", getConfigPath(t))},
+					{Name: "front", Functions: Functions{file: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)), Functions: []Function{}}, Envs: []Env{{Name: "default", file: fmt.Sprintf("%s/front/envs/default.bash", getConfigPath(t))}, {Name: "prod", file: fmt.Sprintf("%s/front/envs/prod.bash", getConfigPath(t))}}, Config: map[string]string{"app": "bash", "path": getProjectPath(t)}, dir: fmt.Sprintf("%s/front", getConfigPath(t))},
 				}, ws)
 			},
 		},
@@ -171,18 +171,21 @@ test_func2() {
 			},
 			func(t *testing.T, w Workspace, err error) {
 				assert.NoError(t, err)
-				assert.Len(t, w.Functions, 2)
+				assert.Len(t, w.Functions.Functions, 2)
 				assert.Equal(t,
 					Workspace{
 						Name: "front",
-						Functions: []Function{
-							{
-								Name:        "test_func1",
-								Description: "A function 1",
-							},
-							{
-								Name:        "test_func2",
-								Description: "A function 2",
+						Functions: Functions{
+							file: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)),
+							Functions: []Function{
+								{
+									Name:        "test_func1",
+									Description: "A function 1",
+								},
+								{
+									Name:        "test_func2",
+									Description: "A function 2",
+								},
 							},
 						},
 						Envs: []Env{
@@ -199,8 +202,7 @@ test_func2() {
 							"app":  "bash",
 							"path": getProjectPath(t),
 						},
-						workspaceDir: fmt.Sprintf("%s/front", getConfigPath(t)),
-						functionFile: fmt.Sprintf("%s/front/functions/functions.bash", getConfigPath(t)),
+						dir: fmt.Sprintf("%s/front", getConfigPath(t)),
 					}, w)
 			},
 		},

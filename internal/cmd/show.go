@@ -29,7 +29,7 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 				Foreground(lipgloss.Color("#FFCC70")).
 				Render("Functions")
 			var functions []string
-			for _, f := range wo.Functions {
+			for _, f := range wo.Functions.Functions {
 				description := ""
 				if f.Description != "" {
 					description = lipgloss.NewStyle().
@@ -50,7 +50,7 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 					),
 				)
 			}
-			if len(wo.Functions) == 0 {
+			if len(wo.Functions.Functions) == 0 {
 				functions = append(functions, lipgloss.NewStyle().
 					Foreground(lipgloss.Color("#8ECDDD")).
 					Render("No functions defined"))

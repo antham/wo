@@ -59,17 +59,19 @@ No envs defined
 				w.Mock.On("Get", args[0]).Return(
 					workspace.Workspace{
 						Name: args[0],
-						Functions: []workspace.Function{
-							{
-								Name:        "start",
-								Description: "Start a server",
-							},
-							{
-								Name:        "db-run",
-								Description: "Start a db",
-							},
-							{
-								Name: "stop",
+						Functions: workspace.Functions{
+							Functions: []workspace.Function{
+								{
+									Name:        "start",
+									Description: "Start a server",
+								},
+								{
+									Name:        "db-run",
+									Description: "Start a db",
+								},
+								{
+									Name: "stop",
+								},
 							},
 						},
 						Envs: []workspace.Env{

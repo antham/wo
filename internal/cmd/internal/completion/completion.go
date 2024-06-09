@@ -56,7 +56,7 @@ func FindFunctions(workspaceManager workspaceManager, toComplete string, args ..
 		return []string{}, cobra.ShellCompDirectiveNoFileComp, err
 	}
 	fs := []string{}
-	for _, f := range w.Functions {
+	for _, f := range w.Functions.Functions {
 		if strings.HasPrefix(f.Name, toComplete) {
 			s := f.Name
 			if f.Description != "" {

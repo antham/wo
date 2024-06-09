@@ -220,18 +220,20 @@ func TestFindFunctions(t *testing.T) {
 				w := newMockWorkspaceManager(t)
 				w.Mock.On("Get", "test").Return(
 					workspace.Workspace{
-						Functions: []workspace.Function{
-							{Name: "a"},
-							{Name: "b"},
-							{Name: "c"},
-							{Name: "d"},
-							{Name: "da"},
-							{Name: "daa", Description: "function daa"},
-							{Name: "dab"},
-							{Name: "dac", Description: "function dac"},
-							{Name: "db"},
-							{Name: "dc"},
-							{Name: "e"},
+						Functions: workspace.Functions{
+							Functions: []workspace.Function{
+								{Name: "a"},
+								{Name: "b"},
+								{Name: "c"},
+								{Name: "d"},
+								{Name: "da"},
+								{Name: "daa", Description: "function daa"},
+								{Name: "dab"},
+								{Name: "dac", Description: "function dac"},
+								{Name: "db"},
+								{Name: "dc"},
+								{Name: "e"},
+							},
 						},
 					}, nil)
 				return w, "da", []string{"test"}
