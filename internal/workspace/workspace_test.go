@@ -612,23 +612,12 @@ func TestBuildAliases(t *testing.T) {
 	scenarios := []scenario{
 		{
 			"Build aliases for all workspace",
-			"",
+			"c_",
 			func(t *testing.T, aliases []string, e error) {
 				assert.NoError(t, e)
 				assert.Equal(t, []string{
 					fmt.Sprintf(`alias c_front="cd %s/front"`, project.getPath(t)),
 					fmt.Sprintf(`alias c_test="cd %s/test"`, project.getPath(t)),
-				}, aliases)
-			},
-		},
-		{
-			"Build aliases with a different prefix",
-			"xx",
-			func(t *testing.T, aliases []string, e error) {
-				assert.NoError(t, e)
-				assert.Equal(t, []string{
-					fmt.Sprintf(`alias xxfront="cd %s/front"`, project.getPath(t)),
-					fmt.Sprintf(`alias xxtest="cd %s/test"`, project.getPath(t)),
 				}, aliases)
 			},
 		},

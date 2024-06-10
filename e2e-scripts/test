@@ -5,6 +5,11 @@ wo create api ~/api || exit 1
 wo create front ~/front || exit 1
 wo create db ~/db || exit 1
 
+# Call the setup command
+wo setup $APP>/tmp/alias || exit 1
+source /tmp/alias
+
+
 # List workspaces
 echo "Workspaces
 
@@ -49,10 +54,7 @@ diff /tmp/expected-api-workspace /tmp/actual-api-workspace || exit 1
 
 test "$(wo r api hello)" = "Hello world !" || exit 1
 
-# Use aliases
-
-wo alias>/tmp/alias || exit 1
-source /tmp/alias
+# Use the aliases
 
 c_api
 test "$PWD" = "$HOME/api" || exit 1

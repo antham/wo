@@ -1,16 +1,27 @@
 package cmd
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/spf13/cobra"
 )
 
 func newSetupCmd(workspaceManager workspaceManager) *cobra.Command {
 	var prefix string
 	cmd := &cobra.Command{
-		Use:   "setup shell",
-		Short: "Setup wo",
-		Args:  cobra.ExactArgs(1),
+		Use:       "setup shell",
+		Short:     "Command to setup wo in the shell",
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"bash", "fish", "zsh", "sh"},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !slices.Contains(cmd.ValidArgs, args[0]) {
+				return fmt.Errorf("the first argument must one of among: %v", cmd.ValidArgs)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// We need this to be able to have the completion working
 			c := &cobra.Command{
 				Use: "wo",
 			}
@@ -37,6 +48,6 @@ func newSetupCmd(workspaceManager workspaceManager) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVarP(&prefix, "prefix", "p", "", "Prefix name to use for the aliases")
+	cmd.Flags().StringVarP(&prefix, "prefix", "p", "c_", "Prefix name to use for the aliases")
 	return cmd
 }

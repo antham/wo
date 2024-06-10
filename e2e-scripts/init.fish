@@ -7,7 +7,6 @@ set -g -x WO_DEBUG true
 set -g -x VISUAL cat
 set -g -x APP fish
 
-
 function create_function
     echo '
 function hello -d "Hello world function"

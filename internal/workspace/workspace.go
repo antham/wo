@@ -103,9 +103,6 @@ func WithConfigPath(path string) func(*WorkspaceManager) {
 }
 
 func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
-	if prefix == "" {
-		prefix = "c_"
-	}
 	workspaces, err := s.List()
 	if err != nil {
 		return []string{}, err
