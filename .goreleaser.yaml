@@ -6,9 +6,23 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
     goarch:
       - amd64
+      - arm64
+
     ldflags:
-      - -X 'github.com/antham/wo/cmd.appVersion={{.Version}}'
+      - -X 'github.com/antham/wo/internal/cmd.appVersion={{.Version}}'
+universal_binaries:
+  - id: wo
+nfpms:
+  - formats:
+      - apk
+      - deb
+      - rpm
+      - termux.deb
+      - archlinux
+    maintainer: Anthony HAMON <hamon.anth@gmail.com>
+dockers:
+  - image_templates:
+      - antham/wo
