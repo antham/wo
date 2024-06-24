@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/antham/wo/internal/shell"
+	"github.com/antham/wo/internal/parser"
 	"github.com/spf13/viper"
 )
 
@@ -490,7 +490,7 @@ func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
 	if err != nil {
 		return Workspace{}, err
 	}
-	funcs := shell.Parse(s.shell, content)
+	funcs := parser.Parse(s.shell, content)
 	envs, err := s.listEnvs(name)
 	if err != nil {
 		return Workspace{}, err
