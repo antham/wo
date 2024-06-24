@@ -1,4 +1,4 @@
-package shell
+package parser
 
 type shellStr string
 
