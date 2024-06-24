@@ -13,13 +13,13 @@ func newShellParser() *shellParser {
 
 func (shellParser *shellParser) parse(content []byte) []Function {
 	functions := []Function{}
-	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:(?P<function_2>.*)\s*\(\))(?:\s*|\n)?{`)
+	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:(?P<function>.*)\s*\(\))(?:\s*|\n)?{`)
 	for _, match := range r.FindAllSubmatch(content, -1) {
 		function := Function{}
 		for i, name := range r.SubexpNames() {
 			if i != 0 && name != "" {
 				switch name {
-				case "function_1", "function_2":
+				case "function":
 					if len(match[i]) == 0 {
 						continue
 					}
