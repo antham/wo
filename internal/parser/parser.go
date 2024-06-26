@@ -1,12 +1,13 @@
 package parser
 
-type shellStr string
+type appStr string
 
 const (
-	zsh  shellStr = "zsh"
-	bash shellStr = "bash"
-	fish shellStr = "fish"
-	sh   shellStr = "sh"
+	zsh  appStr = "zsh"
+	bash appStr = "bash"
+	fish appStr = "fish"
+	sh   appStr = "sh"
+	ruby appStr = "rb"
 )
 
 type Function struct {
@@ -14,12 +15,14 @@ type Function struct {
 	Description string
 }
 
-func Parse(shell string, content []byte) []Function {
-	switch shell {
+func Parse(app string, content []byte) []Function {
+	switch app {
 	case string(bash), string(sh), string(zsh):
 		return newShellParser().parse(content)
 	case string(fish):
 		return newFishParser().parse(content)
+	case string(ruby):
+		return newRubyParser().parse(content)
 	}
 	return []Function{}
 }
