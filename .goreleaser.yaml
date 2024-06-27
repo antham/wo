@@ -14,15 +14,34 @@ builds:
     ldflags:
       - -X 'github.com/antham/wo/internal/cmd.appVersion={{.Version}}'
 universal_binaries:
-  - id: wo
 nfpms:
-  - formats:
+  -
+    formats:
       - apk
       - deb
       - rpm
       - termux.deb
       - archlinux
     maintainer: Anthony HAMON <hamon.anth@gmail.com>
-dockers:
-  - image_templates:
-      - antham/wo
+aurs:
+  -
+    homepage: "https://github.com/antham/wo"
+    description: "Workspace shell manager"
+    maintainers:
+      - "Anthony HAMON <hamon.anth@gmail.com>"
+    license: "MIT"
+    private_key: "{{ .Env.ARCHLINUX_REPO_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/wo-bin.git"
+
+brews:
+  -
+    name: wo
+    homepage: "https://github.com/antham/wo"
+    description: "Workspace shell manager"
+    license: "MIT"
+    repository:
+      owner: antham
+      name: wo-homebrew
+      git:
+        url: 'git@github.com:antham/wo-homebrew.git'
+        private_key: '{{ .Env.HOMEBREW_REPO_KEY }}'
