@@ -309,3 +309,94 @@ func TestNoOp(t *testing.T) {
 		})
 	}
 }
+
+func TestFindConfigKey(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T) (workspaceManager, string, []string)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
+	}
+	scenarios := []scenario{
+		{
+			"Returns a config key from the allowed config",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "pa", []string{}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{"path"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+		{
+			"Do no returns a config key not in the allowed config",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "x", []string{}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			workspaceManager, toComplete, args := s.setup(t)
+			completion, compMode, err := FindConfigKey(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
+		})
+	}
+}
+
+func TestFindConfigValue(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T) (workspaceManager, string, []string)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
+	}
+	scenarios := []scenario{
+		{
+			"Returns dir completion when config key is path",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "/", []string{"path"}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveFilterDirs, compMode)
+			},
+		},
+		{
+			"Returns supported app when config key is app",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				w := newMockWorkspaceManager(t)
+				w.Mock.On("GetSupportedApps").Return([]string{"bash", "fish"})
+				return w, "fi", []string{"app"}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{"fish"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+		{
+			"Returns nothing if the config key is not defined",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "fi", []string{"x"}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			workspaceManager, toComplete, args := s.setup(t)
+			completion, compMode, err := FindConfigValue(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
+		})
+	}
+}

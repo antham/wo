@@ -16,6 +16,7 @@ type workspaceManager interface {
 	RunFunction(string, string, []string) error
 	Remove(string) error
 	SetConfig(string, map[string]string) error
+	GetSupportedApps() []string
 }
 
 type completionManager interface {

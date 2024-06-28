@@ -60,9 +60,16 @@ func newRootCmd() *cobra.Command {
 			completion.FindEnvs,
 		},
 	)
+	setCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.FindWorkspaces,
+			completion.FindConfigKey,
+			completion.FindConfigValue,
+		},
+	)
 
 	configCmd := newConfigCmd()
-	configCmd.AddCommand(newSetCmd(w, wksCompMgr))
+	configCmd.AddCommand(newSetCmd(w, setCompMgr))
 
 	envCmd := newEnvCmd()
 	envCmd.AddCommand(newCreateEnvCmd(w, wksCompMgr))

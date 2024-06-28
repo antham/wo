@@ -235,6 +235,11 @@ func (s WorkspaceManager) SetConfig(name string, kv map[string]string) error {
 				return fmt.Errorf(`path "%s" does not exist`, value)
 			}
 		}
+		if key == "app" {
+			if !slices.Contains(s.GetSupportedApps(), value) {
+				return fmt.Errorf(`app "%s" is not supported`, value)
+			}
+		}
 		v.Set(key, value)
 	}
 	return v.WriteConfig()
@@ -247,6 +252,10 @@ func (s WorkspaceManager) GetConfig(name string, key string) (string, error) {
 		return "", err
 	}
 	return v.GetString(key), nil
+}
+
+func (s WorkspaceManager) GetSupportedApps() []string {
+	return []string{fish, bash, zsh, sh}
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
@@ -320,7 +329,7 @@ func (s WorkspaceManager) resolveConfigFile(name string) string {
 }
 
 func (s WorkspaceManager) getExtension() string {
-	for _, shell := range []string{fish, bash, zsh, sh} {
+	for _, shell := range s.GetSupportedApps() {
 		if strings.Contains(s.shellBin, shell) {
 			return shell
 		}
