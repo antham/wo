@@ -10,8 +10,13 @@ func newEditCmd(workspaceManager workspaceManager, completionManager completionM
 		Short:             "Edit a workspace",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: completionManager.Process,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			return workspaceManager.Edit(args[0])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := workspaceManager.Edit(args[0])
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Workspace '%s' edited\n", args[0])
+			return nil
 		},
 	}
 }

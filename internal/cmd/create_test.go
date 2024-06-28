@@ -13,7 +13,7 @@ func TestNewCreateCmd(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, []string)
-		test  func(*testing.T, error)
+		test  func(*testing.T, *bytes.Buffer, *bytes.Buffer, error)
 	}
 	scenarios := []scenario{
 		{
@@ -24,7 +24,7 @@ func TestNewCreateCmd(t *testing.T) {
 				w.Mock.On("Create", args[0], args[1]).Return(errors.New("an error occurred"))
 				return w, args
 			},
-			func(t *testing.T, err error) {
+			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.Error(t, err)
 			},
 		},
@@ -33,7 +33,7 @@ func TestNewCreateCmd(t *testing.T) {
 			func(t *testing.T) (workspaceManager, []string) {
 				return newMockWorkspaceManager(t), []string{"api%", "/tmp/project"}
 			},
-			func(t *testing.T, err error) {
+			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.Error(t, err)
 			},
 		},
@@ -45,8 +45,9 @@ func TestNewCreateCmd(t *testing.T) {
 				w.Mock.On("Create", args[0], args[1]).Return(nil)
 				return w, args
 			},
-			func(t *testing.T, err error) {
+			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.NoError(t, err)
+				assert.Equal(t, "Workspace 'api' created on path '/tmp/project'\n", outBuf.String())
 			},
 		},
 	}
@@ -54,12 +55,14 @@ func TestNewCreateCmd(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			os.Setenv("EDITOR", "emacs")
 			os.Setenv("SHELL", "/bin/sh")
+			errBuf := &bytes.Buffer{}
+			outBuf := &bytes.Buffer{}
 			w, args := s.setup(t)
 			cmd := newCreateCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)
-			cmd.SetErr(&bytes.Buffer{})
-			cmd.SetOut(&bytes.Buffer{})
-			s.test(t, cmd.Execute())
+			cmd.SetErr(errBuf)
+			cmd.SetOut(outBuf)
+			s.test(t, outBuf, errBuf, cmd.Execute())
 		})
 	}
 }

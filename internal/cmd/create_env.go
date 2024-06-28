@@ -16,8 +16,13 @@ func newCreateEnvCmd(workspaceManager workspaceManager, completionManager comple
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return errors.Join(validator.ValidateName(args[1]))
 		},
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			return workspaceManager.CreateEnv(args[0], args[1])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := workspaceManager.CreateEnv(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Environment '%s' added on workspace '%s'\n", args[1], args[0])
+			return nil
 		},
 	}
 }

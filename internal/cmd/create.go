@@ -16,8 +16,13 @@ func newCreateCmd(workspaceManager workspaceManager, completionManager completio
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return errors.Join(validator.ValidateName(args[0]))
 		},
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			return workspaceManager.Create(args[0], args[1])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := workspaceManager.Create(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Workspace '%s' created on path '%s'\n", args[0], args[1])
+			return nil
 		},
 	}
 }

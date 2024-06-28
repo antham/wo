@@ -11,7 +11,12 @@ func newRemoveCmd(workspaceManager workspaceManager, completionManager completio
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: completionManager.Process,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return workspaceManager.Remove(args[0])
+			err := workspaceManager.Remove(args[0])
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Workspace '%s' deleted\n", args[0])
+			return nil
 		},
 	}
 }

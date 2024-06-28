@@ -10,8 +10,13 @@ func newEditEnvCmd(workspaceManager workspaceManager, completionManager completi
 		Short:             "Edit a workspace environment",
 		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: completionManager.Process,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			return workspaceManager.EditEnv(args[0], args[1])
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := workspaceManager.EditEnv(args[0], args[1])
+			if err != nil {
+				return err
+			}
+			cmd.Printf("Environment '%s' edited on workspace '%s'\n", args[1], args[0])
+			return nil
 		},
 	}
 }
