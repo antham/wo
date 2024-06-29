@@ -580,6 +580,16 @@ func TestSetConfig(t *testing.T) {
 			},
 		},
 		{
+			"Set an unsupported app",
+			"test",
+			"app",
+			"test",
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+				assert.EqualError(t, err, `app "test" is not supported`)
+			},
+		},
+		{
 			"Set a value in an unexisting workspace",
 			"whatever",
 			"path",

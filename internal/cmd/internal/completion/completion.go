@@ -89,3 +89,36 @@ func FindDirs(workspaceManager workspaceManager, toComplete string, args ...stri
 func NoOp(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
 	return []string{}, cobra.ShellCompDirectiveNoFileComp, nil
 }
+
+var config = map[string]func(workspaceManager, string) ([]string, cobra.ShellCompDirective, error){
+	"app": func(workspaceManager workspaceManager, toComplete string) ([]string, cobra.ShellCompDirective, error) {
+		apps := []string{}
+		for _, app := range workspaceManager.GetSupportedApps() {
+			if strings.HasPrefix(app, toComplete) {
+				apps = append(apps, app)
+			}
+		}
+		return apps, cobra.ShellCompDirectiveNoFileComp, nil
+	},
+	"path": func(workspaceManager, string) ([]string, cobra.ShellCompDirective, error) {
+		return []string{}, cobra.ShellCompDirectiveFilterDirs, nil
+	},
+}
+
+func FindConfigKey(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
+	keys := []string{}
+	for key := range config {
+		if strings.HasPrefix(key, toComplete) {
+			keys = append(keys, key)
+		}
+	}
+	return keys, cobra.ShellCompDirectiveNoFileComp, nil
+}
+
+func FindConfigValue(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
+	f, ok := config[args[0]]
+	if ok {
+		return f(workspaceManager, toComplete)
+	}
+	return []string{}, cobra.ShellCompDirectiveNoFileComp, nil
+}
