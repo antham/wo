@@ -15,7 +15,7 @@ func newRemoveCmd(workspaceManager workspaceManager, completionManager completio
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Workspace '%s' deleted\n", args[0])
+			cmd.Printf(regularStyle.Render("Workspace '")+highlightedStyle.Render("%s")+regularStyle.Render("' deleted")+"\n", args[0])
 			return nil
 		},
 	}

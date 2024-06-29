@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -20,14 +19,9 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 			if err != nil {
 				return err
 			}
-			separator := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#22668D")).
-				Render("---")
-			title := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFCC70")).
+			title := titleStyle.
 				Render(fmt.Sprintf("Workspace %s", wo.Name))
-			configTitle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFCC70")).
+			configTitle := titleStyle.
 				Render("Configuration")
 			var configs []string
 			for key, value := range wo.Config {
@@ -35,61 +29,50 @@ func newShowCmd(workspaceManager workspaceManager, completionManager completionM
 					configs,
 					fmt.Sprintf(
 						"%s %s%s",
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#8ECDDD")).
+						regularStyle.
 							Render("*"),
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#FFFADD")).
+						highlightedStyle.
 							Render(key),
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#8ECDDD")).
+						regularStyle.
 							Render(fmt.Sprintf(" : %s", value)),
 					),
 				)
 			}
 			sort.Strings(configs)
-			functionTitle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFCC70")).
+			functionTitle := titleStyle.
 				Render("Functions")
 			var functions []string
 			for _, f := range wo.Functions.Functions {
 				description := ""
 				if f.Description != "" {
-					description = lipgloss.NewStyle().
-						Foreground(lipgloss.Color("#8ECDDD")).
+					description = regularStyle.
 						Render(fmt.Sprintf(" : %s", f.Description))
 				}
 				functions = append(
 					functions,
 					fmt.Sprintf(
 						"%s %s%s",
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#8ECDDD")).
+						regularStyle.
 							Render("*"),
-						lipgloss.NewStyle().
-							Foreground(lipgloss.Color("#FFFADD")).
+						highlightedStyle.
 							Render(f.Name),
 						description,
 					),
 				)
 			}
 			if len(wo.Functions.Functions) == 0 {
-				functions = append(functions, lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#8ECDDD")).
+				functions = append(functions, regularStyle.
 					Render("No functions defined"))
 			}
-			envTitle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFCC70")).
+			envTitle := titleStyle.
 				Render("Envs")
 			var envs []string
 			for _, e := range wo.Envs {
-				envs = append(envs, lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#8ECDDD")).
+				envs = append(envs, regularStyle.
 					Render(fmt.Sprintf("* %s", e.Name)))
 			}
 			if len(wo.Envs) == 0 {
-				envs = append(envs, lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#8ECDDD")).
+				envs = append(envs, regularStyle.
 					Render("No envs defined"))
 			}
 			cmd.Println(title)

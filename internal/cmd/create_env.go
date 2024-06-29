@@ -21,7 +21,10 @@ func newCreateEnvCmd(workspaceManager workspaceManager, completionManager comple
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Environment '%s' added on workspace '%s'\n", args[1], args[0])
+			cmd.Printf(
+				regularStyle.Render("Environment '")+highlightedStyle.Render("%s")+regularStyle.Render("' added on workspace '")+highlightedStyle.Render("%s")+regularStyle.Render("'")+"\n",
+				args[1], args[0],
+			)
 			return nil
 		},
 	}

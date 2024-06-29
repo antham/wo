@@ -15,7 +15,10 @@ func newConfigSetCmd(workspaceManager workspaceManager, completionManager comple
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Config key '%s' edited on workspace '%s'\n", args[1], args[0])
+			cmd.Printf(
+				regularStyle.Render("Config key '")+highlightedStyle.Render("%s")+regularStyle.Render("' edited on workspace '")+highlightedStyle.Render("%s")+"'\n",
+				args[1], args[0],
+			)
 			return nil
 		},
 	}

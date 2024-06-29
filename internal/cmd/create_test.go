@@ -47,7 +47,7 @@ func TestNewCreateCmd(t *testing.T) {
 			},
 			func(t *testing.T, outBuf *bytes.Buffer, errBuf *bytes.Buffer, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, "Workspace 'api' created on path '/tmp/project'\n", outBuf.String())
+				assert.Equal(t, "Workspace 'api' created on path '/tmp/project', reload your shell to setup the project aliases\n", outBuf.String())
 			},
 		},
 	}

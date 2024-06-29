@@ -15,7 +15,7 @@ func newEditCmd(workspaceManager workspaceManager, completionManager completionM
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Workspace '%s' edited\n", args[0])
+			cmd.Printf(regularStyle.Render("Workspace '")+highlightedStyle.Render("%s")+regularStyle.Render("' edited")+"\n", args[0])
 			return nil
 		},
 	}
