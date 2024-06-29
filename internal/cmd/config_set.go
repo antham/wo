@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newSetCmd(workspaceManager workspaceManager, completionManager completionManager) *cobra.Command {
+func newConfigSetCmd(workspaceManager workspaceManager, completionManager completionManager) *cobra.Command {
 	return &cobra.Command{
 		Use:               "set workspace key value",
 		Short:             "Set a configuration",

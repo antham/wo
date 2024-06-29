@@ -122,3 +122,13 @@ func FindConfigValue(workspaceManager workspaceManager, toComplete string, args 
 	}
 	return []string{}, cobra.ShellCompDirectiveNoFileComp, nil
 }
+
+func FindGlobalConfigKey(workspaceManager workspaceManager, toComplete string, args ...string) ([]string, cobra.ShellCompDirective, error) {
+	keys := []string{}
+	for _, key := range []string{"config-dir"} {
+		if strings.HasPrefix(key, toComplete) {
+			keys = append(keys, key)
+		}
+	}
+	return keys, cobra.ShellCompDirectiveNoFileComp, nil
+}

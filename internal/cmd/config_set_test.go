@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewSetCmd(t *testing.T) {
+func TestNewConfigSetCmd(t *testing.T) {
 	type scenario struct {
 		name  string
 		setup func(*testing.T) (workspaceManager, []string)
@@ -49,7 +49,7 @@ func TestNewSetCmd(t *testing.T) {
 			errBuf := &bytes.Buffer{}
 			outBuf := &bytes.Buffer{}
 			w, args := s.setup(t)
-			cmd := newSetCmd(w, newMockCompletionManager(t))
+			cmd := newConfigSetCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)
 			cmd.SetErr(errBuf)
 			cmd.SetOut(outBuf)

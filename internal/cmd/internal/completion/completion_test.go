@@ -400,3 +400,42 @@ func TestFindConfigValue(t *testing.T) {
 		})
 	}
 }
+
+func TestFindGlobalConfigKey(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T) (workspaceManager, string, []string)
+		test  func(*testing.T, []string, cobra.ShellCompDirective, error)
+	}
+	scenarios := []scenario{
+		{
+			"Returns a config key from the allowed config",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "co", []string{}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{"config-dir"}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+		{
+			"Do no returns a config key not in the allowed config",
+			func(t *testing.T) (workspaceManager, string, []string) {
+				return nil, "x", []string{}
+			},
+			func(t *testing.T, completion []string, compMode cobra.ShellCompDirective, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, []string{}, completion)
+				assert.Equal(t, cobra.ShellCompDirectiveNoFileComp, compMode)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			workspaceManager, toComplete, args := s.setup(t)
+			completion, compMode, err := FindGlobalConfigKey(workspaceManager, toComplete, args...)
+			s.test(t, completion, compMode, err)
+		})
+	}
+}
