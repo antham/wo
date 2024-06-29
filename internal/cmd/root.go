@@ -67,15 +67,24 @@ func newRootCmd() *cobra.Command {
 			completion.FindConfigValue,
 		},
 	)
+	globalGetCompMgr := completion.New(
+		w, []completion.Decorator{
+			completion.FindGlobalConfigKey,
+		},
+	)
 
 	configCmd := newConfigCmd()
 	configCmd.AddCommand(newConfigSetCmd(w, configSetCompMgr))
+
+	globalCmd := newGlobalCmd()
+	globalCmd.AddCommand(newGlobalGetCmd(w, globalGetCompMgr))
 
 	envCmd := newEnvCmd()
 	envCmd.AddCommand(newCreateEnvCmd(w, wksCompMgr))
 	envCmd.AddCommand(newEditEnvCmd(w, envCompMgr))
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(envCmd)
+	rootCmd.AddCommand(globalCmd)
 	rootCmd.AddCommand(newSetupCmd(w))
 	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))

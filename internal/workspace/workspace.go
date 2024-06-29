@@ -258,6 +258,10 @@ func (s WorkspaceManager) GetSupportedApps() []string {
 	return []string{fish, bash, zsh, sh}
 }
 
+func (s WorkspaceManager) GetConfigDir() string {
+	return s.configDir
+}
+
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
 	data := []string{}
 	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
