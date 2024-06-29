@@ -15,7 +15,10 @@ func newEditEnvCmd(workspaceManager workspaceManager, completionManager completi
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Environment '%s' edited on workspace '%s'\n", args[1], args[0])
+			cmd.Printf(
+				regularStyle.Render("Environment '")+highlightedStyle.Render("%s")+regularStyle.Render("' edited on workspace '")+highlightedStyle.Render("%s")+regularStyle.Render("'")+"\n",
+				args[1], args[0],
+			)
 			return nil
 		},
 	}

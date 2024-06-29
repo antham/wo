@@ -11,7 +11,7 @@ func newVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Version",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Println(appVersion)
+			cmd.Println(regularStyle.Render(appVersion))
 		},
 	}
 }

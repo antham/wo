@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -22,16 +21,10 @@ func newListCmd(workspaceManager workspaceManager) *cobra.Command {
 			if len(workspaces) == 0 {
 				return errors.New("no workspaces defined")
 			}
-			separator := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#22668D")).
-				Render("---")
-			title := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFCC70")).
-				Render("Workspaces")
+			title := titleStyle.Render("Workspaces")
 			var list []string
 			for _, w := range workspaces {
-				list = append(list, lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#8ECDDD")).
+				list = append(list, regularStyle.
 					Render(fmt.Sprintf("* %s", w.Name)))
 			}
 			cmd.Println(title)
