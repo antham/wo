@@ -21,7 +21,7 @@ func newCreateCmd(workspaceManager workspaceManager, completionManager completio
 			if err != nil {
 				return err
 			}
-			cmd.Printf("Workspace '%s' created on path '%s'\n", args[0], args[1])
+			cmd.Printf("Workspace '%s' created on path '%s', reload your shell to setup the project aliases\n", args[0], args[1])
 			return nil
 		},
 	}
