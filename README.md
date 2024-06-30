@@ -1,7 +1,16 @@
 # [![Go Report Card](https://goreportcard.com/badge/github.com/antham/wo)](https://goreportcard.com/report/github.com/antham/wo) [![codecov](https://codecov.io/gh/antham/wo/graph/badge.svg?token=l5zT9434GU)](https://codecov.io/gh/antham/wo) [![GitHub tag](https://img.shields.io/github/tag/antham/wo.svg)]()
 
-Wo is a shell workspace manager inspired by the great https://github.com/jamesob/desk project.
-To sum up, you can define helpers functions to run related to a project and define environment variables separated per environment (staging, prod, ...).
+Wo is a shell workspace manager inspired by the great https://github.com/jamesob/desk project:
+* create a workspace for each of your project
+* define environments (e.g., staging, production) for each workspace if needed
+* execute workspace functions from anywhere, using a specific environment if needed
+* it supports `bash`,`fish` and `zsh`
+
+### Demonstration
+
+We take as an example a workspace created for a cli project that output the environment variable `SECRET`.
+
+[![asciicast](https://asciinema.org/a/uFpOuKbjFtRtDMiVHI0FwqmPd.svg)](https://asciinema.org/a/uFpOuKbjFtRtDMiVHI0FwqmPd)
 
 ## Install
 
