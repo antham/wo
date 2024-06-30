@@ -396,7 +396,7 @@ func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
 		return Workspace{}, errors.New("the config file of the workspace is corrupted")
 	}
 	if app != s.shell {
-		return Workspace{}, fmt.Errorf(`the "%s" app si not supported for this workspace, it works with "%s"`, app, s.shell)
+		return Workspace{}, fmt.Errorf(`the "%s" app is not supported for this workspace, it works with "%s"`, app, s.shell)
 	}
 	content, err := os.ReadFile(s.resolveFunctionFile(name))
 	if os.IsNotExist(err) {
