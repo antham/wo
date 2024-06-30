@@ -1,0 +1,217 @@
+settings:
+  title: wo,workspace shell manager
+  prompt: "$ "
+  environments:
+    - name: VISUAL
+      value: emacsclient -t
+    - name: SHELL
+      value: /bin/bash
+instructions:
+  - !Command
+    command: cd ~/test
+    hidden: true
+  - !Command
+    command: rm -rf ~/.config/wo
+    hidden: true
+  - !Command
+    command: cat dump-secret/main.go
+  - !Command
+    command: wo create cli $PWD/dump-secret
+  - !Command
+    command: wo list
+  - !Wait 1s
+  - !Command
+    command: wo show cli
+  - !Wait 1s
+  - !Interactive
+    command: wo edit cli
+    keys:
+      - "#"
+      - " "
+      - r
+      - u
+      - n
+      - " "
+      - t
+      - h
+      - e
+      - " "
+      - c
+      - l
+      - i
+      - "\n"
+      - r
+      - u
+      - n
+      - (
+      - )
+      - "\n"
+      - "{"
+      - "\n"
+      - " "
+      - " "
+      - g
+      - o
+      - " "
+      - r
+      - u
+      - n
+      - " "
+      - m
+      - a
+      - i
+      - n
+      - .
+      - g
+      - o
+      - "\n"
+      - "}"
+      - "\n"
+      - "\n"
+      - "#"
+      - " "
+      - s
+      - e
+      - a
+      - r
+      - c
+      - h
+      - " "
+      - t
+      - h
+      - e
+      - " "
+      - p
+      - r
+      - o
+      - j
+      - e
+      - c
+      - t
+      - " "
+      - w
+      - i
+      - t
+      - h
+      - " "
+      - r
+      - g
+      - "\n"
+      - s
+      - e
+      - a
+      - r
+      - c
+      - h
+      - (
+      - )
+      - "\n"
+      - "{"
+      - "\n"
+      - " "
+      - " "
+      - r
+      - g
+      - " "
+      - !Char $
+      - "1"
+      - "\n"
+      - "}"
+      - "\n"
+      - 2s
+      - ^X
+      - ^S
+      - ^X
+      - ^C
+  - !Command
+    command: wo show cli
+  - !Wait 1s
+  - !Command
+    command: wo run cli run
+  - !Wait 2s
+  - !Interactive
+    command: wo env edit cli default
+    keys:
+      - e
+      - x
+      - p
+      - o
+      - r
+      - t
+      - " "
+      - S
+      - E
+      - C
+      - R
+      - E
+      - T
+      - "="
+      - m
+      - y
+      - "-"
+      - d
+      - e
+      - f
+      - a
+      - u
+      - l
+      - t
+      - "-"
+      - s
+      - e
+      - c
+      - r
+      - e
+      - t
+      - 2s
+      - ^X
+      - ^S
+      - ^X
+      - ^C
+  - !Command
+    command: wo run cli run
+  - !Wait 2s
+  - !Command
+    command: wo env create cli prod
+  - !Interactive
+    command: wo env edit cli prod
+    keys:
+      - e
+      - x
+      - p
+      - o
+      - r
+      - t
+      - " "
+      - S
+      - E
+      - C
+      - R
+      - E
+      - T
+      - "="
+      - m
+      - y
+      - "-"
+      - p
+      - r
+      - o
+      - d
+      - "-"
+      - s
+      - e
+      - c
+      - r
+      - e
+      - t
+      - 2s
+      - ^X
+      - ^S
+      - ^X
+      - ^C
+  - !Command
+    command: wo run cli -e prod run
+  - !Wait 2s
+  - !Command
+    command: wo run cli search secret
+  - !Wait 2s
