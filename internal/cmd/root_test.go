@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"os/user"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,26 +43,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.NoError(t, err)
-				path := os.Getenv("WO_CONFIG_PATH")
-				fileInfo, err := os.Stat(path)
-				assert.NoError(t, err)
-				assert.True(t, fileInfo.IsDir())
-			},
-		},
-		{
-			"Create the config in the default folder",
-			func(t *testing.T) {
-				os.Setenv("VISUAL", "emacs")
-				os.Setenv("SHELL", "/bin/bash")
-				os.Unsetenv("WO_CONFIG_PATH")
-			},
-			func(t *testing.T, w workspaceManager, err error) {
-				assert.NoError(t, err)
-				usr, err := user.Current()
-				assert.NoError(t, err)
-				fileInfo, err := os.Stat(fmt.Sprintf("%s/.config/wo", usr.HomeDir))
-				assert.NoError(t, err)
-				assert.True(t, fileInfo.IsDir())
 			},
 		},
 	}

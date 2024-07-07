@@ -75,7 +75,7 @@ func NewWorkspaceManager(options ...func(*WorkspaceManager)) (WorkspaceManager, 
 		return WorkspaceManager{}, errors.New("no editor defined")
 	}
 	w.exec = newCommand(w.shellBin)
-	return w, w.createConfigFolder()
+	return w, nil
 }
 
 func WithEditor(editor string, visual string) func(*WorkspaceManager) {
@@ -117,6 +117,9 @@ func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
 func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
 	entries, err := os.ReadDir(s.configDir)
+	if os.IsNotExist(err) {
+		return workspaces, nil
+	}
 	if err != nil {
 		return workspaces, err
 	}
@@ -138,7 +141,11 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 }
 
 func (s WorkspaceManager) Create(name string, path string) error {
-	err := s.createWorkspaceFolder(name)
+	err := s.createConfigFolder()
+	if err != nil {
+		return err
+	}
+	err = s.createWorkspaceFolder(name)
 	if err != nil {
 		return err
 	}
