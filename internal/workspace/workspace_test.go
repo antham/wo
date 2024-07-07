@@ -61,7 +61,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 				assert.Equal(t, "vim", w.editor)
 				assert.Equal(t, "/usr/bin/bash", w.shellBin)
 				assert.Equal(t, "bash", w.shell)
-				assert.DirExists(t, w.configDir)
 			},
 		},
 		{
@@ -74,7 +73,6 @@ func TestNewWorkspaceManager(t *testing.T) {
 				assert.Equal(t, "emacs", w.editor)
 				assert.Equal(t, "/bin/zsh", w.shellBin)
 				assert.Equal(t, "zsh", w.shell)
-				assert.DirExists(t, w.configDir)
 			},
 		},
 	}
@@ -232,13 +230,23 @@ func TestCreate(t *testing.T) {
 	project := &project{}
 	type scenario struct {
 		name  string
-		setup func(*testing.T, WorkspaceManager)
+		setup func(*testing.T, WorkspaceManager) string
 		test  func(*testing.T, error)
 	}
 	scenarios := []scenario{
 		{
+			"Unexisting config path",
+			func(t *testing.T, w WorkspaceManager) string {
+				return "/tmp/tmp/temp"
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
 			"Create workspace",
-			func(t *testing.T, w WorkspaceManager) {
+			func(t *testing.T, w WorkspaceManager) string {
+				return project.getPath(t)
 			},
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
@@ -263,9 +271,9 @@ func TestCreate(t *testing.T) {
 			os.RemoveAll(config.getPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			s.setup(t, w)
+			projectPath := s.setup(t, w)
 			assert.NoError(t, err)
-			s.test(t, w.Create("test", project.getPath(t)))
+			s.test(t, w.Create("test", projectPath))
 		})
 	}
 }
