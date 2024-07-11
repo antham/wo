@@ -17,18 +17,20 @@ instructions:
     command: wo create cli $PWD/dump-secret
   - !Command
     command: source <(wo setup bash)
-    hidden: true
   - !Command
     command: c_cli
+  - !Command
+    command: pwd
+  - !Wait 2s
   - !Command
     command: cat main.go
   - !Wait 3s
   - !Command
     command: wo list
-  - !Wait 2s
+  - !Wait 4s
   - !Command
     command: wo show cli
-  - !Wait 2s
+  - !Wait 4s
   - !Interactive
     command: wo edit cli
     keys:
@@ -129,10 +131,10 @@ instructions:
       - ^S
       - ^X
       - ^C
-  - !Wait 2s
+  - !Wait 4s
   - !Command
     command: wo show cli
-  - !Wait 2s
+  - !Wait 4s
   - !Command
     command: wo run cli run
   - !Wait 2s
@@ -175,6 +177,7 @@ instructions:
       - ^S
       - ^X
       - ^C
+  - !Wait 2s
   - !Command
     command: wo run cli run
   - !Wait 2s
@@ -216,9 +219,10 @@ instructions:
       - ^S
       - ^X
       - ^C
+  - !Wait 2s
   - !Command
     command: wo show cli
-  - !Wait 2s
+  - !Wait 4s
   - !Command
     command: wo run cli -e prod run
   - !Wait 2s

@@ -10,7 +10,7 @@ Wo is a shell workspace manager inspired by the great https://github.com/jamesob
 
 We take as an example a workspace created for a cli project that output the environment variable `SECRET`.
 
-[![asciicast](https://asciinema.org/a/uFpOuKbjFtRtDMiVHI0FwqmPd.svg)](https://asciinema.org/a/uFpOuKbjFtRtDMiVHI0FwqmPd)
+[![asciicast](https://asciinema.org/a/yGEwo4mv3bNcmTM3YC0oD4kfN.svg)](https://asciinema.org/a/yGEwo4mv3bNcmTM3YC0oD4kfN)
 
 ## Install
 
