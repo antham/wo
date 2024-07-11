@@ -14,15 +14,21 @@ instructions:
     command: rm -rf ~/.config/wo
     hidden: true
   - !Command
-    command: cat dump-secret/main.go
-  - !Command
     command: wo create cli $PWD/dump-secret
   - !Command
+    command: source <(wo setup bash)
+    hidden: true
+  - !Command
+    command: c_cli
+  - !Command
+    command: cat main.go
+  - !Wait 3s
+  - !Command
     command: wo list
-  - !Wait 1s
+  - !Wait 2s
   - !Command
     command: wo show cli
-  - !Wait 1s
+  - !Wait 2s
   - !Interactive
     command: wo edit cli
     keys:
@@ -123,9 +129,10 @@ instructions:
       - ^S
       - ^X
       - ^C
+  - !Wait 2s
   - !Command
     command: wo show cli
-  - !Wait 1s
+  - !Wait 2s
   - !Command
     command: wo run cli run
   - !Wait 2s
@@ -209,6 +216,9 @@ instructions:
       - ^S
       - ^X
       - ^C
+  - !Command
+    command: wo show cli
+  - !Wait 2s
   - !Command
     command: wo run cli -e prod run
   - !Wait 2s
