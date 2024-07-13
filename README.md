@@ -97,13 +97,10 @@ You can set the theme with the `-t` flag, it could be either `dark` or `light`, 
 
 ### Creating a workspace
 
-First you need to create a workspace for your project, use the `create` command, run:
+To create a workspace for your project, use the `create` command, run:
 ``` sh
-wo create api $PWD/projects/api
+wo create cli $PWD/projects/cli
 ```
-
-The first parameter is any name you find convenient to refer to your project and the second parameter is the path of your project on your computer.
-
 
 Once your workspace is created, an alias is created to jump into the project folder, you need to reload your shell to "activate" it, open a new terminal or in the existing run:
 
@@ -111,18 +108,19 @@ Once your workspace is created, an alias is created to jump into the project fol
 exec <name_of_your_shell>
 ```
 
-The alias in our case will be `c_api`, so the `c_` prefix (you can configure that) followed by the name of your workspace.
+The alias in our case will be `c_cli`, so the `c_` prefix (you can configure that) followed by the name of your workspace.
 
 
-### Adding functions
+### Adding functions to a workspace
 
-When you have create a workspace, you can then add some functions, run:
+To add some functions, run:
 
 ``` sh
-wo edit api
+wo edit cli
 ```
 
-A file will be opened with your default editor, the function you add must fit with the shell you are currently using, if you add one comment line right before the function name it will be taken and used as the description of the function or if the shell is `fish` the description added with the `-d` will be used. 
+A file will be opened with your default editor, the function you add must fit with the shell you are currently using, if you add one comment line right before the function name it will be taken and used as the description of the function or if the shell is `fish` the description added with the `-d` will be used.
+
 Here are examples of how to define a function for every shell:
 
 #### Bash
@@ -152,7 +150,7 @@ end
 
 ### Running a function
 
-Once you have defined a function you can call it with the `run` command, run:
+To run a function into a workspace, call the `run` command:
 
 ``` sh
 wo run cli run_curl http://google.fr
@@ -163,10 +161,13 @@ The first parameter is the workspace to use, the second parameter, the function 
 
 A function is ran from the folder of your project, so you don't need to do anything to access a command relative to your project, let's say a `npm run` for instance.
 
-A function is ran with a `default` environment if you specified nothing. You can edit an environment with:
+
+### Running a function in an environment
+
+All functions are ran in a `default` environment if you specified nothing, you can edit this environment with:
 
 ``` sh
-wo edit env default
+wo env edit cli default
 ```
 
 It will open an editor to let you add your environment variables or things you want to run with each functions.
@@ -174,7 +175,7 @@ It will open an editor to let you add your environment variables or things you w
 If you want to create additional environment, run:
 
 ``` sh
-wo create env prod
+wo env create cli prod
 ```
 
 You can edit the environment with the previous `edit` command.
@@ -192,3 +193,18 @@ You get special environment variables that are defined for every functions:
 | WO_ENV               | the name of the environment used |
 | WO_NAME              | the name of the workspace used   |
 
+### Changing the path of an existing workspace
+
+Run:
+
+``` sh
+wo config set cli $PWD/project/cli2
+```
+
+### To go further
+
+Check the help of the command line
+
+``` sh
+wo help
+```
