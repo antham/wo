@@ -9,6 +9,7 @@ import (
 
 func newSetupCmd(workspaceManager workspaceManager) *cobra.Command {
 	var prefix string
+	var theme string
 	cmd := &cobra.Command{
 		Use:       "setup shell",
 		Short:     "Command to setup wo in the shell",
@@ -45,9 +46,14 @@ func newSetupCmd(workspaceManager workspaceManager) *cobra.Command {
 			for _, alias := range aliases {
 				cmd.Println(alias)
 			}
+			if !slices.Contains([]string{"dark", "light"}, theme) {
+				return fmt.Errorf(`"%s" theme is not supported, must be either "light" or "dark"`, theme)
+			}
+			cmd.Println(workspaceManager.CreateEnvVariableStatement("WO_THEME", theme))
 			return nil
 		},
 	}
 	cmd.Flags().StringVarP(&prefix, "prefix", "p", "c_", "Prefix name to use for the aliases")
+	cmd.Flags().StringVarP(&theme, "theme", "t", "light", "Theme to use")
 	return cmd
 }
