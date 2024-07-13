@@ -39,6 +39,20 @@ brew tap antham/homebrew-wo
 brew install wo
 ```
 
+### With the install script
+
+To install the binary in `/usr/local/bin`, run:
+
+``` sh
+curl -sSf https://raw.githubusercontent.com/antham/wo/main/installer.sh | sudo sh
+```
+
+To select another path, run:
+
+``` sh
+curl -sSf https://raw.githubusercontent.com/antham/wo/main/installer.sh | sh -s -- -o "<install_path>"
+```
+
 ### Other systems
 
 You can find `deb`, `rpm` and `apk` packages on the release page : https://github.com/antham/wo/releases
@@ -46,7 +60,6 @@ You can find `deb`, `rpm` and `apk` packages on the release page : https://githu
 ### Binaries
 
 You can find binaries for `linux` and `darwin` for `arm64` and `amd64` on the release page: https://github.com/antham/wo/releases
-
 
 ## Setup
 
