@@ -78,6 +78,24 @@ func (_m *mockWorkspaceManager) CreateEnv(_a0 string, _a1 string) error {
 	return r0
 }
 
+// CreateEnvVariableStatement provides a mock function with given fields: _a0, _a1
+func (_m *mockWorkspaceManager) CreateEnvVariableStatement(_a0 string, _a1 string) string {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateEnvVariableStatement")
+	}
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
 // Edit provides a mock function with given fields: _a0
 func (_m *mockWorkspaceManager) Edit(_a0 string) error {
 	ret := _m.Called(_a0)

@@ -66,6 +66,8 @@ Add the following command to your shell init file according to your shell.
 
 You can customize how the aliases are generated (see below in usage what is the goal of those aliases), the default is to prefix them with `c_`, you can change this behaviour with the `-p` flag on the setup command.
 
+You can set the theme with the `-t` flag, it could be either `dark` or `light`, the default is the `light` theme.
+
 ### Bash
 
 `source <(wo setup bash)`

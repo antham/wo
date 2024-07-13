@@ -271,8 +271,8 @@ func (s WorkspaceManager) GetConfigDir() string {
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
 	data := []string{}
-	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
-	data = append(data, s.createEnvVariableStatement(fmt.Sprintf("%s_ENV", envVariablePrefix), env))
+	data = append(data, s.CreateEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
+	data = append(data, s.CreateEnvVariableStatement(fmt.Sprintf("%s_ENV", envVariablePrefix), env))
 	envFile := s.resolveEnvFile(name, env)
 	_, eerr := os.Stat(envFile)
 	if eerr == nil {
@@ -379,7 +379,7 @@ func (s WorkspaceManager) getViper(name string) *viper.Viper {
 	return v
 }
 
-func (s WorkspaceManager) createEnvVariableStatement(name string, value string) string {
+func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) string {
 	switch s.shell {
 	case bash, sh, zsh:
 		return fmt.Sprintf("export %s=%s", name, value)

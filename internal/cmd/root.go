@@ -32,6 +32,14 @@ func newRootCmd() *cobra.Command {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
+	err = viper.BindEnv("WO_THEME")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if viper.GetString("WO_THEME") == "dark" {
+		applyDarkTheme()
+	}
+
 	w, err := newWorkspaceManager()
 	if err != nil {
 		log.Fatal(err)

@@ -52,6 +52,7 @@ func TestNewSetupCmd(t *testing.T) {
 						},
 						nil,
 					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "light").Return("set -x -g WO_THEME light")
 				return w
 			},
 			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
@@ -80,6 +81,7 @@ alias c_test="cd /tmp/test"`,
 						},
 						nil,
 					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "light").Return("export WO_THEME=light")
 				return w
 			},
 			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
@@ -97,7 +99,7 @@ alias c_test="cd /tmp/test"`,
 		},
 		{
 			"We get the autocompletion for zsh and aliases",
-			[]string{"bash"},
+			[]string{"zsh"},
 			func(t *testing.T) workspaceManager {
 				w := newMockWorkspaceManager(t)
 				w.Mock.On("BuildAliases", "c_").
@@ -108,6 +110,7 @@ alias c_test="cd /tmp/test"`,
 						},
 						nil,
 					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "light").Return("export WO_THEME=light")
 				return w
 			},
 			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
@@ -119,12 +122,12 @@ alias c_test="cd /tmp/test"`,
 				)
 				assert.Contains(t,
 					stdout.String(),
-					`__wo_init_completion()`,
+					`zsh completion for wo`,
 				)
 			},
 		},
 		{
-			"We get the aliases only for sh",
+			"We do not get the completion for sh",
 			[]string{"sh"},
 			func(t *testing.T) workspaceManager {
 				w := newMockWorkspaceManager(t)
@@ -136,6 +139,7 @@ alias c_test="cd /tmp/test"`,
 						},
 						nil,
 					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "light").Return("export WO_THEME=light")
 				return w
 			},
 			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
@@ -143,6 +147,7 @@ alias c_test="cd /tmp/test"`,
 				assert.Equal(t,
 					`alias c_front="cd /tmp/front"
 alias c_test="cd /tmp/test"
+export WO_THEME=light
 `,
 					stdout.String(),
 				)
@@ -158,6 +163,40 @@ alias c_test="cd /tmp/test"
 						[]string{},
 						nil,
 					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "light").Return("set -x -g WO_THEME light")
+				return w
+			},
+			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
+				assert.NoError(t, err)
+			},
+		},
+		{
+			"Set an unsupported theme",
+			[]string{"fish", "-t", "whatever"},
+			func(t *testing.T) workspaceManager {
+				w := newMockWorkspaceManager(t)
+				w.Mock.On("BuildAliases", "c_").
+					Return(
+						[]string{},
+						nil,
+					)
+				return w
+			},
+			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"We get the dark theme",
+			[]string{"fish", "-t", "dark"},
+			func(t *testing.T) workspaceManager {
+				w := newMockWorkspaceManager(t)
+				w.Mock.On("BuildAliases", "c_").
+					Return(
+						[]string{},
+						nil,
+					)
+				w.Mock.On("CreateEnvVariableStatement", "WO_THEME", "dark").Return("set -x -g WO_THEME dark")
 				return w
 			},
 			func(t *testing.T, stdout *bytes.Buffer, stderr *bytes.Buffer, err error) {
