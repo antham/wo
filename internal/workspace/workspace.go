@@ -327,6 +327,10 @@ func (s WorkspaceManager) listEnvs(name string) ([]Env, error) {
 	return envs, err
 }
 
+func (s WorkspaceManager) resolveGitignoreFile() string {
+	return fmt.Sprintf("%s/.gitignore", s.GetConfigDir())
+}
+
 func (s WorkspaceManager) resolveFunctionFile(name string) string {
 	return fmt.Sprintf("%s/functions.%s", s.getWorkspaceFunctionsDir(name), s.getExtension())
 }
@@ -349,7 +353,7 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return os.MkdirAll(s.configDir, 0o777)
+	return errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
 }
 
 func (s WorkspaceManager) createWorkspaceFolder(name string) error {

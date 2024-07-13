@@ -201,6 +201,16 @@ Run:
 wo config set cli $PWD/project/cli2
 ```
 
+### Committing the workspace
+
+You can commit and push the workspace folders on a repository, they are located at:
+
+``` sh
+wo global get config-dir
+```
+
+A default `.gitignore` is provided to exclude all environment variables, at the moment the process of committing and pushing the workspaces is manual. 
+
 ### To go further
 
 Check the help of the command line
