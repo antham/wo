@@ -265,6 +265,16 @@ func TestCreate(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", project.getPath(t)), string(b))
 			},
 		},
+		{
+			"Creating workspace twice fails",
+			func(t *testing.T, w WorkspaceManager) string {
+				assert.NoError(t, w.Create("test", project.getPath(t)))
+				return project.getPath(t)
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {

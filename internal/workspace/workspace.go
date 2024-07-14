@@ -141,6 +141,9 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 }
 
 func (s WorkspaceManager) Create(name string, path string) error {
+	if s.hasWorkspace(name) {
+		return fmt.Errorf(`workspace "%s" already exists`, name)
+	}
 	err := s.createConfigFolder()
 	if err != nil {
 		return err
@@ -391,6 +394,11 @@ func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) 
 		return fmt.Sprintf("set -x -g %s %s", name, value)
 	}
 	return ""
+}
+
+func (s WorkspaceManager) hasWorkspace(name string) bool {
+	_, err := os.Stat(s.getWorkspaceDir(name))
+	return !os.IsNotExist(err)
 }
 
 func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
