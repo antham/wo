@@ -141,6 +141,9 @@ func (s WorkspaceManager) Get(name string) (Workspace, error) {
 }
 
 func (s WorkspaceManager) Create(name string, path string) error {
+	if s.hasWorkspace(name) {
+		return fmt.Errorf(`workspace "%s" already exists`, name)
+	}
 	err := s.createConfigFolder()
 	if err != nil {
 		return err
@@ -353,7 +356,26 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
+	err := errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
+	if err != nil {
+		return nil
+	}
+	configFile := fmt.Sprintf("%s/config.toml", s.configDir)
+	v := viper.New()
+	v.SetConfigFile(configFile)
+	_, err = os.Stat(configFile)
+	if os.IsNotExist(err) {
+		v.Set("shell", s.shell)
+		return v.WriteConfig()
+	}
+	err = v.ReadInConfig()
+	if err != nil {
+		return err
+	}
+	if v.GetString("shell") != s.shell {
+		return fmt.Errorf(`the configured shell for the app "%s" is different from the one being used "%s"`, v.GetString("shell"), s.shell)
+	}
+	return nil
 }
 
 func (s WorkspaceManager) createWorkspaceFolder(name string) error {
@@ -391,6 +413,11 @@ func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) 
 		return fmt.Sprintf("set -x -g %s %s", name, value)
 	}
 	return ""
+}
+
+func (s WorkspaceManager) hasWorkspace(name string) bool {
+	_, err := os.Stat(s.getWorkspaceDir(name))
+	return !os.IsNotExist(err)
 }
 
 func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
