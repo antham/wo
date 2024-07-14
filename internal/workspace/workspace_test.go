@@ -251,6 +251,16 @@ func TestCreate(t *testing.T) {
 			func(t *testing.T, err error) {
 				assert.NoError(t, err)
 				path := config.getPath(t)
+				_, err = os.Stat(path + "/config.toml")
+				assert.NoError(t, err)
+				b, err := os.ReadFile(path + "/config.toml")
+				assert.NoError(t, err)
+				assert.Equal(t, "shell = 'bash'\n", string(b))
+				_, err = os.Stat(path + "/.gitignore")
+				assert.NoError(t, err)
+				b, err = os.ReadFile(path + "/.gitignore")
+				assert.NoError(t, err)
+				assert.Equal(t, "*/envs/*\n", string(b))
 				envFile, err := os.Stat(path + "/test/envs/default.bash")
 				assert.NoError(t, err)
 				assert.Equal(t, "default.bash", envFile.Name())
@@ -260,7 +270,7 @@ func TestCreate(t *testing.T) {
 				configFile, err := os.Stat(path + "/test/config.toml")
 				assert.NoError(t, err)
 				assert.Equal(t, "config.toml", configFile.Name())
-				b, err := os.ReadFile(path + "/test/config.toml")
+				b, err = os.ReadFile(path + "/test/config.toml")
 				assert.NoError(t, err)
 				assert.Equal(t, fmt.Sprintf("app = 'bash'\npath = '%s'\n", project.getPath(t)), string(b))
 			},
@@ -273,6 +283,19 @@ func TestCreate(t *testing.T) {
 			},
 			func(t *testing.T, err error) {
 				assert.Error(t, err)
+			},
+		},
+		{
+			"Creating workspace with 2 different shells",
+			func(t *testing.T, w WorkspaceManager) string {
+				w1, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/zsh"), WithConfigPath(config.getPath(t)))
+				assert.NoError(t, err)
+				assert.NoError(t, w1.Create("test2", project.getPath(t)))
+				return project.getPath(t)
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+				t.Log(err)
 			},
 		},
 	}

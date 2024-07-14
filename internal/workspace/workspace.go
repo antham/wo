@@ -356,7 +356,26 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	return errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
+	err := errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
+	if err != nil {
+		return nil
+	}
+	configFile := fmt.Sprintf("%s/config.toml", s.configDir)
+	v := viper.New()
+	v.SetConfigFile(configFile)
+	_, err = os.Stat(configFile)
+	if os.IsNotExist(err) {
+		v.Set("shell", s.shell)
+		return v.WriteConfig()
+	}
+	err = v.ReadInConfig()
+	if err != nil {
+		return err
+	}
+	if v.GetString("shell") != s.shell {
+		return fmt.Errorf(`the configured shell for the app "%s" is different from the one being used "%s"`, v.GetString("shell"), s.shell)
+	}
+	return nil
 }
 
 func (s WorkspaceManager) createWorkspaceFolder(name string) error {
