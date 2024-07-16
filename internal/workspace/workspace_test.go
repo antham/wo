@@ -338,15 +338,23 @@ func TestCreateEnv(t *testing.T) {
 				assert.Equal(t, "functions.bash", functionFile.Name())
 			},
 		},
+		{
+			"Creating env twice fails",
+			func(t *testing.T, w WorkspaceManager) {
+				assert.NoError(t, w.CreateEnv("test", "prod"))
+			},
+			func(t *testing.T, err error) {
+				assert.Error(t, err)
+			},
+		},
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			os.RemoveAll(config.getPath(t))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
-			s.setup(t, w)
-			assert.NoError(t, err)
 			assert.NoError(t, w.Create("test", project.getPath(t)))
+			s.setup(t, w)
 			s.test(t, w.CreateEnv("test", "prod"))
 		})
 	}
