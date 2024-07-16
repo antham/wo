@@ -21,6 +21,7 @@ import (
 const (
 	defaultConfigDir  = ".config/wo"
 	envVariablePrefix = "WO"
+	defaultEnv        = "default"
 )
 
 const (
@@ -116,7 +117,7 @@ func (s WorkspaceManager) BuildAliases(prefix string) ([]string, error) {
 
 func (s WorkspaceManager) List() ([]Workspace, error) {
 	workspaces := []Workspace{}
-	entries, err := os.ReadDir(s.configDir)
+	entries, err := os.ReadDir(s.getWorkspacesDir())
 	if os.IsNotExist(err) {
 		return workspaces, nil
 	}
@@ -156,7 +157,7 @@ func (s WorkspaceManager) Create(name string, path string) error {
 	if err != nil {
 		return err
 	}
-	err = s.createFile(s.resolveEnvFile(name, "default"))
+	err = s.createFile(s.resolveEnvFile(name, defaultEnv))
 	if err != nil {
 		return err
 	}
@@ -285,6 +286,45 @@ func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) 
 	return ""
 }
 
+func (s WorkspaceManager) Migrate() error {
+	stat, err := os.Stat(fmt.Sprintf("%s/workspaces", s.configDir))
+	if stat != nil {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(s.configDir)
+	if os.IsNotExist(err) {
+		return err
+	}
+	err = os.MkdirAll(s.getWorkspacesDir(), 0o777)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
+		err := os.Rename(fmt.Sprintf("%s/%s", s.configDir, e.Name()), fmt.Sprintf("%s/%s", s.getWorkspacesDir(), e.Name()))
+		if err != nil {
+			return err
+		}
+		err = s.createWorkspaceFolder(e.Name())
+		if err != nil {
+			return err
+		}
+		err = s.createFile(s.resolveEnvFile(e.Name(), defaultEnv))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
 	data := []string{}
 	data = append(data, s.CreateEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))
@@ -369,7 +409,7 @@ func (s WorkspaceManager) getExtension() string {
 }
 
 func (s WorkspaceManager) createConfigFolder() error {
-	err := errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("*/envs/*\n"), 0o666))
+	err := errors.Join(os.MkdirAll(s.configDir, 0o777), os.WriteFile(s.resolveGitignoreFile(), []byte("**/envs/**\n"), 0o666))
 	if err != nil {
 		return nil
 	}
@@ -393,13 +433,18 @@ func (s WorkspaceManager) createConfigFolder() error {
 
 func (s WorkspaceManager) createWorkspaceFolder(name string) error {
 	return errors.Join(
+		os.MkdirAll(s.getWorkspaceDir(name), 0o777),
 		os.MkdirAll(s.getWorkspaceFunctionsDir(name), 0o777),
 		os.MkdirAll(s.getWorkspaceEnvsDir(name), 0o777),
 	)
 }
 
+func (s WorkspaceManager) getWorkspacesDir() string {
+	return fmt.Sprintf("%s/workspaces", s.configDir)
+}
+
 func (s WorkspaceManager) getWorkspaceDir(name string) string {
-	return fmt.Sprintf("%s/%s", s.configDir, name)
+	return fmt.Sprintf("%s/%s", s.getWorkspacesDir(), name)
 }
 
 func (s WorkspaceManager) getWorkspaceFunctionsDir(name string) string {

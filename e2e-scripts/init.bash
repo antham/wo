@@ -15,5 +15,5 @@ echo '
 hello() {
   echo "Hello world !"
 }
-' > ~/.config/wo/api/functions/functions.bash
+' > ~/.config/wo/workspaces/api/functions/functions.bash
 }
