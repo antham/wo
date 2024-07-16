@@ -12,5 +12,5 @@ function create_function
 function hello -d "Hello world function"
   echo "Hello world !"
 end
-' >~/.config/wo/api/functions/functions.fish
+' >~/.config/wo/workspaces/api/functions/functions.fish
 end

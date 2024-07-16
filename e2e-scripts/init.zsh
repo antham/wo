@@ -13,5 +13,5 @@ echo '
 hello() {
   echo "Hello world !"
 }
-' > ~/.config/wo/api/functions/functions.zsh
+' > ~/.config/wo/workspaces/api/functions/functions.zsh
 }
