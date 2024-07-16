@@ -178,6 +178,9 @@ func (s WorkspaceManager) CreateEnv(name string, env string) error {
 	if err != nil {
 		return err
 	}
+	if s.hasEnv(name, env) {
+		return fmt.Errorf(`env "%s" already exists`, name)
+	}
 	return s.createFile(s.resolveEnvFile(name, env))
 }
 
@@ -270,6 +273,16 @@ func (s WorkspaceManager) GetSupportedApps() []string {
 
 func (s WorkspaceManager) GetConfigDir() string {
 	return s.configDir
+}
+
+func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) string {
+	switch s.shell {
+	case bash, sh, zsh:
+		return fmt.Sprintf("export %s=%s", name, value)
+	case fish:
+		return fmt.Sprintf("set -x -g %s %s", name, value)
+	}
+	return ""
 }
 
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
@@ -405,14 +418,9 @@ func (s WorkspaceManager) getViper(name string) *viper.Viper {
 	return v
 }
 
-func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) string {
-	switch s.shell {
-	case bash, sh, zsh:
-		return fmt.Sprintf("export %s=%s", name, value)
-	case fish:
-		return fmt.Sprintf("set -x -g %s %s", name, value)
-	}
-	return ""
+func (s WorkspaceManager) hasEnv(name string, env string) bool {
+	_, err := os.Stat(s.resolveEnvFile(name, env))
+	return !os.IsNotExist(err)
 }
 
 func (s WorkspaceManager) hasWorkspace(name string) bool {
