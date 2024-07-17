@@ -180,7 +180,7 @@ func (s WorkspaceManager) CreateEnv(name string, env string) error {
 		return err
 	}
 	if s.hasEnv(name, env) {
-		return fmt.Errorf(`env "%s" already exists`, name)
+		return fmt.Errorf(`env "%s" already exists`, env)
 	}
 	return s.createFile(s.resolveEnvFile(name, env))
 }
