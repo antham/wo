@@ -479,19 +479,26 @@ func (s WorkspaceManager) getWorkspace(name string) (Workspace, error) {
 		return Workspace{}, errors.New("the workspace does not exist")
 	}
 	app, err := s.GetConfig(name, "app")
-	if err != nil {
+	if err != nil || app == "" {
 		return Workspace{}, errors.New("the config file of the workspace is corrupted")
 	}
 	path, err := s.GetConfig(name, "path")
-	if err != nil {
+	if err != nil || path == "" {
 		return Workspace{}, errors.New("the config file of the workspace is corrupted")
 	}
 	if app != s.shell {
 		return Workspace{}, fmt.Errorf(`the "%s" app is not supported for this workspace, it works with "%s"`, app, s.shell)
 	}
+	_, err = os.ReadFile(s.resolveEnvFile(name, defaultEnv))
+	if os.IsNotExist(err) {
+		return Workspace{}, errors.New("the default env file of the workspace is corrupted")
+	}
+	if err != nil {
+		return Workspace{}, err
+	}
 	content, err := os.ReadFile(s.resolveFunctionFile(name))
 	if os.IsNotExist(err) {
-		return Workspace{}, errors.New("the workspace does not exist")
+		return Workspace{}, errors.New("the function file of the workspace is corrupted")
 	}
 	if err != nil {
 		return Workspace{}, err

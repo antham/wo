@@ -699,3 +699,91 @@ func TestBuildAliases(t *testing.T) {
 		})
 	}
 }
+
+func TestGetWorkspace(t *testing.T) {
+	type scenario struct {
+		name  string
+		setup func(*testing.T, string, string, WorkspaceManager)
+		test  func(*testing.T, string, string, Workspace, error)
+	}
+	scenarios := []scenario{
+		{
+			"Get an unexisting workspace",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, w.Remove("api"))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace with a missing app config",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, os.WriteFile(configPath+"/workspaces/api/config.toml", []byte("path = '/home'"), 0o666))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace with a missing path config",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, os.WriteFile(configPath+"/workspaces/api/config.toml", []byte("app = 'fish'"), 0o666))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace with an invalid shell",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, os.WriteFile(configPath+"/workspaces/api/config.toml", []byte("app = 'fish'\npath = '/home'"), 0o666))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace with a missing default env file",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, os.Remove(configPath+"/workspaces/api/envs/default.bash"))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace with a missing function file",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+				assert.NoError(t, os.Remove(configPath+"/workspaces/api/functions/functions.bash"))
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.Error(t, err)
+			},
+		},
+		{
+			"Get a workspace",
+			func(t *testing.T, projectPath string, configPath string, w WorkspaceManager) {
+			},
+			func(t *testing.T, projectPath string, configPath string, workspace Workspace, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, configPath+"/workspaces/api", workspace.dir)
+				assert.Equal(t, "api", workspace.Name)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			config := &config{}
+			project := &project{}
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
+			assert.NoError(t, err)
+			projectPath := project.getPath(t)
+			configPath := config.getPath(t)
+			assert.NoError(t, w.Create("api", projectPath))
+			s.setup(t, projectPath, configPath, w)
+			workspace, err := w.getWorkspace("api")
+			s.test(t, projectPath, configPath, workspace, err)
+		})
+	}
+}
