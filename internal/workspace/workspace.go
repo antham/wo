@@ -325,6 +325,32 @@ func (s WorkspaceManager) Migrate() error {
 	return nil
 }
 
+func (s WorkspaceManager) Fix() error {
+	entries, err := os.ReadDir(s.getWorkspacesDir())
+	if os.IsNotExist(err) {
+		return err
+	}
+	err = os.MkdirAll(s.getWorkspacesDir(), 0o777)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		err = s.createWorkspaceFolder(e.Name())
+		if err != nil {
+			return err
+		}
+		err = s.createFile(s.resolveFunctionFile(e.Name()))
+		if err != nil {
+			return err
+		}
+		err = s.createFile(s.resolveEnvFile(e.Name(), defaultEnv))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s WorkspaceManager) appendLoadStatement(name string, env string, functionAndArgs []string) []string {
 	data := []string{}
 	data = append(data, s.CreateEnvVariableStatement(fmt.Sprintf("%s_NAME", envVariablePrefix), name))

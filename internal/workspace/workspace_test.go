@@ -586,6 +586,57 @@ func TestRemove(t *testing.T) {
 	}
 }
 
+func TestFix(t *testing.T) {
+	config := &config{}
+	project := &project{}
+	type scenario struct {
+		name  string
+		setup func(*testing.T, WorkspaceManager)
+		test  func(*testing.T, error)
+	}
+	scenarios := []scenario{
+		{
+			"Fix a failing workspace",
+			func(*testing.T, WorkspaceManager) {
+				path := config.getPath(t)
+				err := os.RemoveAll(path + "/workspaces/test/envs")
+				assert.NoError(t, err)
+				err = os.Remove(path + "/workspaces/test/functions/functions.bash")
+				assert.NoError(t, err)
+				err = os.RemoveAll(path + "/workspaces/front/envs")
+				assert.NoError(t, err)
+				err = os.Remove(path + "/workspaces/front/functions/functions.bash")
+				assert.NoError(t, err)
+			},
+			func(t *testing.T, e error) {
+				assert.NoError(t, e)
+				path := config.getPath(t)
+				_, err := os.Stat(path + "/workspaces/test/functions/functions.bash")
+				assert.NoError(t, err)
+				_, err = os.Stat(path + "/workspaces/test/envs/default.bash")
+				assert.NoError(t, err)
+				_, err = os.Stat(path + "/workspaces/front/functions/functions.bash")
+				assert.NoError(t, err)
+				_, err = os.Stat(path + "/workspaces/front/envs/default.bash")
+				assert.NoError(t, err)
+			},
+		},
+	}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			os.RemoveAll(config.getPath(t))
+			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
+			assert.NoError(t, err)
+			err = w.Create("test", project.getPath(t))
+			assert.NoError(t, err)
+			err = w.Create("front", project.getPath(t))
+			assert.NoError(t, err)
+			s.setup(t, w)
+			s.test(t, w.Fix())
+		})
+	}
+}
+
 func TestSetConfig(t *testing.T) {
 	config := &config{}
 	project := &project{}
