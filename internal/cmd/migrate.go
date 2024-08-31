@@ -14,7 +14,7 @@ func newMigrateCmd(workspaceManager workspaceManager) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cmd.Printf(regularStyle.Render("Config migrated"))
+			cmd.Print(regularStyle.Render("Config migrated"))
 			return nil
 		},
 	}
