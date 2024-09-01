@@ -20,7 +20,6 @@ type workspaceManager interface {
 	SetConfig(string, map[string]string) error
 	GetSupportedApps() []string
 	GetConfigDir() string
-	Migrate() error
 }
 
 type completionManager interface {

@@ -286,45 +286,6 @@ func (s WorkspaceManager) CreateEnvVariableStatement(name string, value string) 
 	return ""
 }
 
-func (s WorkspaceManager) Migrate() error {
-	stat, err := os.Stat(fmt.Sprintf("%s/workspaces", s.configDir))
-	if stat != nil {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(s.configDir)
-	if os.IsNotExist(err) {
-		return err
-	}
-	err = os.MkdirAll(s.getWorkspacesDir(), 0o777)
-	if err != nil {
-		return err
-	}
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		if strings.HasPrefix(e.Name(), ".") {
-			continue
-		}
-		err := os.Rename(fmt.Sprintf("%s/%s", s.configDir, e.Name()), fmt.Sprintf("%s/%s", s.getWorkspacesDir(), e.Name()))
-		if err != nil {
-			return err
-		}
-		err = s.createWorkspaceFolder(e.Name())
-		if err != nil {
-			return err
-		}
-		err = s.createFile(s.resolveEnvFile(e.Name(), defaultEnv))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (s WorkspaceManager) Fix() error {
 	entries, err := os.ReadDir(s.getWorkspacesDir())
 	if os.IsNotExist(err) {

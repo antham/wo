@@ -246,24 +246,6 @@ func (_m *mockWorkspaceManager) List() ([]workspace.Workspace, error) {
 	return r0, r1
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *mockWorkspaceManager) Migrate() error {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for Migrate")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // Remove provides a mock function with given fields: _a0
 func (_m *mockWorkspaceManager) Remove(_a0 string) error {
 	ret := _m.Called(_a0)
