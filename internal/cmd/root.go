@@ -94,6 +94,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(envCmd)
 	rootCmd.AddCommand(globalCmd)
 	rootCmd.AddCommand(newSetupCmd(w))
+	rootCmd.AddCommand(newFixCmd(w))
 	rootCmd.AddCommand(newCreateCmd(w, dirCompMgr))
 	rootCmd.AddCommand(newEditCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newListCmd(w))
@@ -101,7 +102,6 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newRunCmd(w, funcCompMgr))
 	rootCmd.AddCommand(newShowCmd(w, wksCompMgr))
 	rootCmd.AddCommand(newVersionCmd())
-	rootCmd.AddCommand(newMigrateCmd(w))
 	return rootCmd
 }
 

@@ -161,7 +161,6 @@ The first parameter is the workspace to use, the second parameter, the function 
 
 A function is ran from the folder of your project, so you don't need to do anything to access a command relative to your project, let's say a `npm run` for instance.
 
-
 ### Running a function in an environment
 
 All functions are ran in a `default` environment if you specified nothing, you can edit this environment with:
@@ -210,6 +209,8 @@ wo global get config-dir
 ```
 
 A default `.gitignore` is provided to exclude all environment variables. At the moment the process of committing and pushing the workspaces is manual. 
+
+When you restore a backup from git run `wo fix` to restore the default environment as the folder containing all the environments are not committed.
 
 ### To go further
 

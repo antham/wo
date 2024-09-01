@@ -13,13 +13,13 @@ type workspaceManager interface {
 	CreateEnv(string, string) error
 	Edit(string) error
 	EditEnv(string, string) error
+	Fix() error
 	List() ([]workspace.Workspace, error)
 	RunFunction(string, string, []string) error
 	Remove(string) error
 	SetConfig(string, map[string]string) error
 	GetSupportedApps() []string
 	GetConfigDir() string
-	Migrate() error
 }
 
 type completionManager interface {
