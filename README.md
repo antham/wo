@@ -3,7 +3,7 @@
 Wo is a shell workspace manager inspired by the great https://github.com/jamesob/desk project:
 * create a workspace for each of your project
 * define environments (e.g., staging, production) for each workspace if needed or use the default one
-* execute workspace functions from anywhere, using a specific environment if needed
+* define shell functions callable from anywhere, using a specific environment if needed
 * supports `bash`,`fish` and `zsh`
 
 ### Demonstration
