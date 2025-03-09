@@ -1,6 +1,6 @@
 module github.com/antham/wo
 
-go 1.21.7
+go 1.24.0
 
 require (
 	github.com/charmbracelet/lipgloss v1.0.0
