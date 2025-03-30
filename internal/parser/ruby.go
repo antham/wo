@@ -1,22 +1,22 @@
-package shell
+package parser
 
 import (
 	"regexp"
 	"strings"
 )
 
-type shellParser struct{}
+type rubyParser struct{}
 
-func newShellParser() *shellParser {
-	return &shellParser{}
+func newRubyParser() *rubyParser {
+	return &rubyParser{}
 }
 
-func (shellParser *shellParser) parse(content []byte) []Function {
+func (r *rubyParser) parse(content []byte) []Function {
 	functions := []Function{}
-	r := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:(?P<function>.*)\s*\(\))(?:\s*|\n)?{`)
-	for _, match := range r.FindAllSubmatch(content, -1) {
+	re := regexp.MustCompile(`(?m)(?:#\s*(?P<description>.+)\n)?(?:def\s+(?P<function>[^\n|(]+))`)
+	for _, match := range re.FindAllSubmatch(content, -1) {
 		function := Function{}
-		for i, name := range r.SubexpNames() {
+		for i, name := range re.SubexpNames() {
 			if i != 0 && name != "" {
 				switch name {
 				case "function":
