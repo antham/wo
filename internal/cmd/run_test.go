@@ -43,8 +43,8 @@ func TestNewRunCmd(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.Setenv("EDITOR", "emacs")
-			os.Setenv("SHELL", "/bin/sh")
+			assert.NoError(t, os.Setenv("EDITOR", "emacs"))
+			assert.NoError(t, os.Setenv("SHELL", "/bin/sh"))
 			w, args := s.setup(t)
 			cmd := newRunCmd(w, newMockCompletionManager(t))
 			cmd.SetArgs(args)

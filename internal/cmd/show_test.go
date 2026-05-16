@@ -134,8 +134,8 @@ Envs
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.Setenv("EDITOR", "emacs")
-			os.Setenv("SHELL", "/bin/sh")
+			assert.NoError(t, os.Setenv("EDITOR", "emacs"))
+			assert.NoError(t, os.Setenv("SHELL", "/bin/sh"))
 			errBuf := &bytes.Buffer{}
 			outBuf := &bytes.Buffer{}
 			w, args := s.setup(t)

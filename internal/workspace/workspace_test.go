@@ -78,7 +78,7 @@ func TestNewWorkspaceManager(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			visual, editor, shell := s.setup()
 			manager, err := NewWorkspaceManager(WithEditor(editor, visual), WithShellPath(shell), WithConfigPath(config.getPath(t)))
 			s.test(t, manager, err)
@@ -127,7 +127,7 @@ func TestList(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
@@ -215,7 +215,7 @@ test_func2() {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			s.setup(t, w)
@@ -301,7 +301,7 @@ func TestCreate(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			projectPath := s.setup(t, w)
@@ -350,7 +350,7 @@ func TestCreateEnv(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			assert.NoError(t, w.Create("test", project.getPath(t)))
@@ -385,7 +385,7 @@ func TestEdit(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			exec := NewMockCommander(t)
@@ -423,7 +423,7 @@ func TestEditEnv(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			err = w.Create("test", project.getPath(t))
@@ -513,7 +513,7 @@ end
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath(s.shell), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			err = w.Create("test", project.getPath(t))
@@ -568,7 +568,7 @@ func TestRemove(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			err = w.Create("test", project.getPath(t))
@@ -624,7 +624,7 @@ func TestFix(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			err = w.Create("test", project.getPath(t))
@@ -701,7 +701,7 @@ func TestSetConfig(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			err = w.Create("test", project.getPath(t))
@@ -734,7 +734,7 @@ func TestBuildAliases(t *testing.T) {
 	}
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			os.RemoveAll(config.getPath(t))
+			assert.NoError(t, os.RemoveAll(config.getPath(t)))
 			w, err := NewWorkspaceManager(WithEditor("emacs", "emacs"), WithShellPath("/bin/bash"), WithConfigPath(config.getPath(t)))
 			assert.NoError(t, err)
 			testProjectPath := fmt.Sprintf("%s/test", project.getPath(t))

@@ -17,7 +17,7 @@ func newGlobalGetCmd(workspaceManager workspaceManager, completionManager comple
 			case "config-dir":
 				cmd.Printf("%s", workspaceManager.GetConfigDir())
 			default:
-				return fmt.Errorf("Key '%s' does not exist", args[0])
+				return fmt.Errorf("key '%s' does not exist", args[0])
 			}
 			return nil
 		},

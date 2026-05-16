@@ -17,8 +17,8 @@ func TestNewWorkspaceManager(t *testing.T) {
 		{
 			"Missing VISUAL or EDITOR variable",
 			func(t *testing.T) {
-				os.Unsetenv("VISUAL")
-				os.Unsetenv("EDITOR")
+				assert.NoError(t, os.Unsetenv("VISUAL"))
+				assert.NoError(t, os.Unsetenv("EDITOR"))
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.Error(t, err)
@@ -27,8 +27,8 @@ func TestNewWorkspaceManager(t *testing.T) {
 		{
 			"Missing SHELL variable",
 			func(t *testing.T) {
-				os.Setenv("VISUAL", "emacs")
-				os.Unsetenv("SHELL")
+				assert.NoError(t, os.Setenv("VISUAL", "emacs"))
+				assert.NoError(t, os.Unsetenv("SHELL"))
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.Error(t, err)
@@ -37,9 +37,9 @@ func TestNewWorkspaceManager(t *testing.T) {
 		{
 			"Customize the config directory",
 			func(t *testing.T) {
-				os.Setenv("VISUAL", "emacs")
-				os.Setenv("SHELL", "/bin/bash")
-				os.Setenv("WO_CONFIG_PATH", os.TempDir())
+				assert.NoError(t, os.Setenv("VISUAL", "emacs"))
+				assert.NoError(t, os.Setenv("SHELL", "/bin/bash"))
+				assert.NoError(t, os.Setenv("WO_CONFIG_PATH", os.TempDir()))
 			},
 			func(t *testing.T, w workspaceManager, err error) {
 				assert.NoError(t, err)
